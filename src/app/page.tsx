@@ -1,12 +1,8 @@
 import Link from "next/link";
+import { listTracks } from "@/lib/content/loader";
 
-const tracks = [
-  { title: "HTML & CSS", blurb: "Structure pages, style text, master flexbox.", tag: "Build the page", color: "bg-orange-500" },
-  { title: "Bootstrap", blurb: "Responsive grids and cards in minutes.", tag: "Build the page", color: "bg-violet-500" },
-  { title: "JavaScript", blurb: "Variables, functions and arrays.", tag: "Write the function", color: "bg-yellow-500" },
-  { title: "Python", blurb: "Print, functions, lists and loops.", tag: "Write the function", color: "bg-sky-500" },
-  { title: "SQL", blurb: "Query a real online-shop database.", tag: "Query the data", color: "bg-emerald-500" },
-];
+const CHALLENGE_LABEL = { page: "Build the page", function: "Write the function", query: "Query the data" } as const;
+
 
 const features = [
   {
@@ -38,7 +34,9 @@ const steps = [
   { n: 4, title: "Earn XP", body: "Pass the tests to earn XP, level up and unlock badges." },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const tracks = await listTracks();
+
   return (
     <>
       <section className="relative overflow-hidden">
@@ -87,17 +85,22 @@ export default function LandingPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-12">
-        <h2 className="text-2xl font-bold">Tracks</h2>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="text-2xl font-bold">Tracks</h2>
+          <Link href="/tracks" className="text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+            Browse all lessons →
+          </Link>
+        </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {tracks.map((t) => (
-            <div key={t.title} className="card p-5">
+            <Link key={t.slug} href={`/tracks/${t.slug}`} className="card p-5 transition hover:border-indigo-400">
               <span className={`block h-1.5 w-10 rounded-full ${t.color}`} aria-hidden />
               <h3 className="mt-3 font-semibold">{t.title}</h3>
-              <p className="mt-1 text-sm text-muted">{t.blurb}</p>
+              <p className="mt-1 text-sm text-muted">{t.description}</p>
               <p className="mt-3 text-xs font-medium uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
-                {t.tag}
+                {CHALLENGE_LABEL[t.lessons[0]?.type ?? "page"]}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

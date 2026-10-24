@@ -1,0 +1,40 @@
+{
+  "tests": [
+    {
+      "id": "row-in-container",
+      "name": "There is a .row inside the .container",
+      "check": { "kind": "exists", "selector": ".container .row" }
+    },
+    {
+      "id": "three-columns",
+      "name": "The row has three col-md-4 columns",
+      "check": { "kind": "count", "selector": ".row > .col-md-4", "min": 3 },
+      "hint": "Each column needs class=\"col-12 col-md-4\" and must be a direct child of the .row."
+    },
+    {
+      "id": "columns-full-width-on-phones",
+      "name": "Columns are full width on phones (col-12)",
+      "check": { "kind": "count", "selector": ".row > .col-12.col-md-4", "min": 3 }
+    },
+    {
+      "id": "cards-in-columns",
+      "name": "Each column holds a .card",
+      "check": { "kind": "count", "selector": ".col-md-4 > .card", "min": 3 }
+    },
+    {
+      "id": "card-titles",
+      "name": "Every card has a title",
+      "check": { "kind": "count", "selector": ".card .card-body .card-title", "min": 3 }
+    },
+    {
+      "id": "card-text",
+      "name": "Every card has some text",
+      "check": { "kind": "count", "selector": ".card .card-body .card-text", "min": 3 }
+    },
+    {
+      "id": "card-buttons",
+      "name": "Every card has a button",
+      "check": { "kind": "count", "selector": ".card .card-body .btn", "min": 3 }
+    }
+  ]
+}

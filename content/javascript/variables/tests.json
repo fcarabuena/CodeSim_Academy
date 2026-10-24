@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "id": "prints-line",
+      "kind": "stdout",
+      "name": "Prints \"Tokyo has 6 visitors\"",
+      "expected": "Tokyo has 6 visitors",
+      "hint": "Check spelling, spaces and capital letters. visitors should be 6 after you add 1."
+    }
+  ]
+}

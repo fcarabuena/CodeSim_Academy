@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "id": "html-lang",
+      "name": "The <html> tag has a lang attribute",
+      "check": { "kind": "attr", "selector": "html", "name": "lang", "value": { "matches": "^[a-z]{2}" } },
+      "hint": "Change <html> to <html lang=\"en\">."
+    },
+    {
+      "id": "title",
+      "name": "The page has a title",
+      "check": { "kind": "text", "selector": "head > title", "text": { "matches": "\\S" } },
+      "hint": "Put some text inside <title></title> in the head."
+    },
+    {
+      "id": "one-h1",
+      "name": "The page has exactly one <h1> heading",
+      "check": { "kind": "count", "selector": "body h1", "min": 1, "max": 1 }
+    },
+    {
+      "id": "h1-text",
+      "name": "The heading is not empty",
+      "check": { "kind": "text", "selector": "body h1", "text": { "matches": "\\S" } }
+    },
+    {
+      "id": "two-paragraphs",
+      "name": "The page has at least two paragraphs",
+      "check": { "kind": "count", "selector": "body p", "min": 2 },
+      "hint": "Each paragraph needs its own <p>...</p>."
+    }
+  ]
+}

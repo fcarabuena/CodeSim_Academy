@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "id": "prints-both-lines",
+      "kind": "stdout",
+      "name": "Prints both lines in the right order",
+      "expected": "Hello, Python!\nA cat has 9 lives",
+      "hint": "You need two print() calls. Check the comma, the exclamation mark and the capital letters."
+    }
+  ]
+}

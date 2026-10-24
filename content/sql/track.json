@@ -1,0 +1,6 @@
+{
+  "title": "SQL",
+  "description": "Ask questions of a real online-shop database with SELECT, WHERE, ORDER BY and JOIN.",
+  "order": 5,
+  "color": "bg-emerald-500"
+}

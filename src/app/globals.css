@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Track colours are Tailwind classes written in each content track.json file. */
+@source "../../content";
 
 :root {
   --background: #f8fafc;
@@ -50,4 +52,40 @@ body {
 @utility input {
   @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
     focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30;
+}
+
+/* Lesson text rendered from markdown (see components/markdown.tsx). */
+.lesson-prose {
+  @apply space-y-4 leading-7;
+}
+.lesson-prose h2 {
+  @apply pt-4 text-xl font-bold;
+}
+.lesson-prose h3 {
+  @apply pt-2 text-lg font-semibold;
+}
+.lesson-prose ul {
+  @apply list-disc space-y-1 pl-6;
+}
+.lesson-prose ol {
+  @apply list-decimal space-y-1 pl-6;
+}
+.lesson-prose a {
+  @apply font-medium text-indigo-600 underline dark:text-indigo-400;
+}
+.lesson-prose :not(pre) > code {
+  @apply rounded bg-indigo-50 px-1.5 py-0.5 font-mono text-[0.875em] text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200;
+}
+.lesson-prose pre {
+  @apply overflow-x-auto rounded-xl bg-slate-900 p-4 font-mono text-sm leading-6 text-slate-100;
+}
+.lesson-prose table {
+  @apply block w-full overflow-x-auto text-sm;
+}
+.lesson-prose th,
+.lesson-prose td {
+  @apply border border-border px-3 py-1.5 text-left;
+}
+.lesson-prose th {
+  @apply bg-border/40 font-semibold;
 }

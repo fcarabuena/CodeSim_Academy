@@ -11,9 +11,10 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4">
         <Logo />
-        <nav className="flex items-center gap-1 text-sm sm:gap-3">
+        <nav className="flex items-center gap-0.5 text-sm sm:gap-3">
+          <NavLink href="/tracks">Tracks</NavLink>
           {user ? (
             <>
               <NavLink href="/dashboard">Dashboard</NavLink>
@@ -22,7 +23,7 @@ export async function SiteHeader() {
                 {user.name ?? user.email}
               </span>
               <form action={logOutAction}>
-                <button type="submit" className="btn-secondary px-3 py-1.5">
+                <button type="submit" className="btn-secondary px-2.5 py-1.5 sm:px-3">
                   Log out
                 </button>
               </form>
@@ -45,7 +46,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className="rounded-md px-2 py-1.5 font-medium text-muted hover:text-foreground"
+      className="rounded-md px-1.5 py-1.5 font-medium text-muted hover:text-foreground sm:px-2"
     >
       {children}
     </Link>

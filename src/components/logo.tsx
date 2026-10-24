@@ -10,7 +10,7 @@ export function Logo() {
         {"</>"}
       </span>
       <span>
-        CodeSim <span className="text-indigo-600 dark:text-indigo-400">Academy</span>
+        CodeSim <span className="hidden text-indigo-600 sm:inline dark:text-indigo-400">Academy</span>
       </span>
     </Link>
   );
