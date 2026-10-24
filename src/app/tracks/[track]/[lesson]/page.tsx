@@ -60,7 +60,7 @@ export default async function LessonPage({ params }: PageProps<"/tracks/[track]/
           <Markdown>{lesson.body}</Markdown>
         </div>
 
-        <Hints hints={lesson.hints} />
+        <Hints hints={lesson.hints} lessonKey={lessonKey(track.slug, lesson.slug)} />
 
         <nav className="mt-10 flex justify-between gap-4 border-t border-border pt-6 text-sm">
           {prev ? (

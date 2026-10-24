@@ -1,5 +1,5 @@
 /**
- * Syncs tracks and lessons from /content into the database.
+ * Syncs tracks, lessons and badges from /content into the database.
  *
  * Safe to run any number of times: rows are matched by slug and updated in
  * place, so student progress is kept. Lessons deleted from /content are only
@@ -11,7 +11,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { listTracks } from "../src/lib/content/loader";
+import { getBadgeDefinitions, listTracks } from "../src/lib/content/loader";
 
 const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 if (!url) {
@@ -45,6 +45,13 @@ async function main() {
     }
     console.log(`✓ ${t.title}: ${t.lessons.length} lesson(s)`);
   }
+
+  const badges = await getBadgeDefinitions();
+  for (const b of badges) {
+    const data = { title: b.title, description: b.description, icon: b.icon, criteriaJson: b.criteria };
+    await prisma.badge.upsert({ where: { slug: b.slug }, update: data, create: { ...data, slug: b.slug } });
+  }
+  console.log(`✓ Badges: ${badges.length}`);
 
   const orphans = await prisma.lesson.findMany({
     where: { id: { notIn: [...seen] } },

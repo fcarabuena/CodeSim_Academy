@@ -3,9 +3,10 @@
 An e-learning platform where students learn programming through interactive,
 auto-graded coding challenges and earn XP, levels, streaks and badges.
 
-> **Status:** Phase 3 of 6 (setup, auth, lessons, code editor, in-browser code
-> runners, grading, submissions and progress). XP, badges and leaderboards arrive
-> next; the full free deployment guide (Render + Neon) arrives in Phase 6.
+> **Status:** Phase 4 of 6 (setup, auth, lessons, code editor, in-browser code
+> runners, grading, submissions, progress, XP, levels, streaks, badges and the
+> weekly leaderboard). The teacher dashboard, the remaining lessons and the full
+> free deployment guide (Render + Neon) come next.
 
 ## Tech stack
 
@@ -89,7 +90,7 @@ Any other PostgreSQL 13+ server also works: put its URL in both `DATABASE_URL` a
 | `npm run check` | Lint + type-check + unit tests |
 | `npm run db:migrate` | Create a new migration after editing `prisma/schema.prisma` |
 | `npm run db:deploy` | Apply migrations |
-| `npm run db:seed` | Sync tracks and lessons from `/content` into the database (safe to re-run) |
+| `npm run db:seed` | Sync tracks, lessons and badges from `/content` into the database (safe to re-run) |
 | `npm run content:expected` | Regenerate `expected.json` for SQL lessons after changing a solution |
 | `npm run db:studio` | Browse the database |
 
@@ -107,6 +108,7 @@ src/app/tracks/      tracks list, track map, lesson page
 src/lib/content/     lesson file loader + Zod schemas for /content
 src/lib/runners/     Runner interface, browser runners, page probe, loop guard
 src/lib/grading/     pure grading functions (server-side)
+src/lib/gamification/ XP/level formula, streaks, badges, leaderboard week (pure + award.ts)
 src/app/api/submissions/  grades and saves submissions
 public/runners/      worker scripts for JavaScript, Python (Pyodide), SQL (sql.js)
 content/             lessons (see "Writing lessons")
@@ -148,6 +150,33 @@ server-side runner (below).
 Java, PHP, Node, Django, Flask...): implement the `Runner` interface in
 `src/lib/runners/types.ts` so it produces the same `Observations`, and the
 existing grading and submission code works unchanged.
+
+## XP, levels, streaks and badges
+
+All rewards are decided **on the server, inside the same database transaction
+that saves the submission**. The transaction first locks the student's row, so
+two submissions arriving at once can't both award the same XP or badge (tested
+with five simultaneous submissions).
+
+- **XP**: each lesson's `xp` from its frontmatter, awarded on the **first**
+  completion only. Re-solving a lesson is fine for practice but earns nothing.
+- **Levels**: reaching level *n* takes `100 × (n − 1)^1.5` total XP (level 2 at
+  100 XP, 3 at 283, 4 at 520, 5 at 800). The formula lives in one function,
+  `src/lib/gamification/levels.ts`.
+- **Daily streak**: grows by one when a student passes any challenge on a new
+  calendar day in **their own timezone** (saved at sign-up from the browser; UTC if
+  unknown), and starts again at 1 after a missed day. It's computed from
+  timestamps, so there's no nightly job.
+- **Badges**: defined in `content/badges.json` (criteria: lessons completed, a
+  specific track or any track completed, streak length, level reached, or a lesson
+  completed without revealing hints) and checked by one function after every
+  passing submission. Run `npm run db:seed` after editing badges.
+- **Weekly leaderboard**: XP from lessons first completed this week, Monday 00:00 to
+  Monday 00:00 **UTC** (one shared window for everyone), students only. It "resets"
+  automatically because it's computed from completion timestamps on each visit.
+
+"No Hints Needed" relies on the browser reporting how many hints were revealed,
+so like the code observations it's an honour system.
 
 ## Writing lessons
 

@@ -54,6 +54,9 @@ function createClient() {
 
 export type Db = ReturnType<typeof createClient>;
 
+/** The client passed to `db.$transaction(async (tx) => ...)` callbacks. */
+export type DbTx = Omit<Db, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends">;
+
 // Reuse one client across hot reloads in development.
 const globalForDb = globalThis as unknown as { db?: Db };
 

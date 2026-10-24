@@ -155,3 +155,35 @@ export const TYPES_BY_LANGUAGE: Record<Language, ChallengeType[]> = {
   python: ["function"],
   sql: ["query"],
 };
+
+// --- Badges (content/badges.json) ---------------------------------------------
+
+export const badgeCriteriaSchema = z.discriminatedUnion("type", [
+  /** Completed at least `count` lessons in total. */
+  z.object({ type: z.literal("lessons_completed"), count: z.number().int().positive() }),
+  /** Completed every lesson of one track. */
+  z.object({ type: z.literal("track_completed"), track: slug }),
+  /** Completed every lesson of any track. */
+  z.object({ type: z.literal("any_track_completed") }),
+  /** Daily streak of at least `days`. */
+  z.object({ type: z.literal("streak"), days: z.number().int().positive() }),
+  /** Reached at least `level`. */
+  z.object({ type: z.literal("level"), level: z.number().int().positive() }),
+  /** Completed a lesson for the first time without revealing its hints. */
+  z.object({ type: z.literal("no_hints") }),
+]);
+export type BadgeCriteria = z.infer<typeof badgeCriteriaSchema>;
+
+export const badgeDefinitionSchema = z.object({
+  slug,
+  title: z.string().min(1),
+  description: z.string().min(1),
+  /** An emoji. */
+  icon: z.string().min(1).max(8),
+  criteria: badgeCriteriaSchema,
+});
+export type BadgeDefinition = z.infer<typeof badgeDefinitionSchema>;
+
+export const badgesFileSchema = z
+  .array(badgeDefinitionSchema)
+  .refine((b) => new Set(b.map((x) => x.slug)).size === b.length, { message: "badge slugs must be unique" });

@@ -10,6 +10,7 @@ import type { Observations, Probe, ProbeObservation } from "../runners/types";
 import {
   CONTENT_DIR,
   getDataset,
+  getBadgeDefinitions,
   getExpectedResult,
   getLesson,
   getLessonSolution,
@@ -93,6 +94,15 @@ describe("content", () => {
     expect(new Set(tracks.map((t) => t.order)).size).toBe(tracks.length);
     for (const t of tracks) {
       expect(new Set(t.lessons.map((l) => l.order)).size, t.slug).toBe(t.lessons.length);
+    }
+  });
+
+  it("has valid badges that only refer to existing tracks", async () => {
+    const badges = await getBadgeDefinitions();
+    expect(badges.length).toBeGreaterThanOrEqual(7);
+    const trackSlugs = new Set(tracks.map((t) => t.slug));
+    for (const b of badges) {
+      if (b.criteria.type === "track_completed") expect(trackSlugs.has(b.criteria.track), b.slug).toBe(true);
     }
   });
 

@@ -18,12 +18,21 @@ export async function SiteHeader() {
           {user ? (
             <>
               <NavLink href="/dashboard">Dashboard</NavLink>
-              {isStaff && <NavLink href="/teacher">Teacher</NavLink>}
-              <span className="hidden text-muted md:inline" title={user.email ?? undefined}>
-                {user.name ?? user.email}
+              <span className="hidden sm:inline">
+                <NavLink href="/leaderboard">Leaderboard</NavLink>
               </span>
-              <form action={logOutAction}>
-                <button type="submit" className="btn-secondary px-2.5 py-1.5 sm:px-3">
+              {isStaff && <NavLink href="/teacher">Teacher</NavLink>}
+              <Link
+                href="/profile"
+                title={`Your profile (${user.name ?? user.email ?? ""})`}
+                className="ml-1 grid size-8 place-items-center rounded-full bg-indigo-600 text-sm font-bold text-white hover:bg-indigo-500"
+              >
+                <span aria-hidden>{(user.name ?? user.email ?? "?").charAt(0).toUpperCase()}</span>
+                <span className="sr-only">Your profile</span>
+              </Link>
+              {/* On phones, log out from the profile page to keep the header on one line. */}
+              <form action={logOutAction} className="hidden sm:block">
+                <button type="submit" className="btn-secondary px-3 py-1.5">
                   Log out
                 </button>
               </form>

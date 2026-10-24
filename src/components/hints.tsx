@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { recordHintsRevealed } from "@/lib/hint-usage";
 
 /** Reveals the lesson's hints one at a time. */
-export function Hints({ hints }: { hints: string[] }) {
+export function Hints({ hints, lessonKey }: { hints: string[]; lessonKey: string }) {
   const [shown, setShown] = useState(0);
   if (hints.length === 0) return null;
 
@@ -14,7 +15,11 @@ export function Hints({ hints }: { hints: string[] }) {
         {shown < hints.length && (
           <button
             type="button"
-            onClick={() => setShown((n) => n + 1)}
+            onClick={() => {
+              const next = shown + 1;
+              setShown(next);
+              recordHintsRevealed(lessonKey, next);
+            }}
             className="btn border border-amber-300 bg-white px-3 py-1.5 text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/40 dark:text-amber-100"
           >
             💡 {shown === 0 ? "Show a hint" : "Next hint"} ({shown}/{hints.length})

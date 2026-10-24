@@ -89,3 +89,40 @@ body {
 .lesson-prose th {
   @apply bg-border/40 font-semibold;
 }
+
+/* Toasts (components/toaster.tsx) */
+@keyframes toast-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes toast-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35) rotate(-8deg);
+  }
+  70% {
+    transform: scale(0.95) rotate(4deg);
+  }
+}
+.toast-pop {
+  animation: toast-pop 0.25s ease-out;
+}
+.toast-bounce {
+  display: inline-block;
+  animation: toast-bounce 0.8s ease-in-out 0.15s 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast-pop,
+  .toast-bounce {
+    animation: none;
+  }
+}

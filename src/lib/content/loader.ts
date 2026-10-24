@@ -4,12 +4,14 @@ import matter from "gray-matter";
 import { z } from "zod";
 import type { RunSpec } from "@/lib/runners/types";
 import {
+  badgesFileSchema,
   EXTENSIONS,
   lessonFrontmatterSchema,
   queryResultSchema,
   testsSchemaByType,
   trackSchema,
   TYPES_BY_LANGUAGE,
+  type BadgeDefinition,
   type LessonFrontmatter,
   type LessonTests,
   type QueryResult,
@@ -31,6 +33,7 @@ import {
  *   content/<track>/<lesson>/tests.json     grading tests
  *   content/<track>/<lesson>/expected.json  SQL lessons: solution's result (generated)
  *   content/datasets/<name>.sql             SQLite datasets for SQL lessons
+ *   content/badges.json                     badge definitions and award criteria
  */
 
 export const CONTENT_DIR = path.join(process.cwd(), "content");
@@ -191,4 +194,20 @@ export async function getRunSpec(meta: LessonMeta): Promise<RunSpec> {
     case "query":
       return { type: "query", datasetSql: await getDataset((tests as QueryTests).dataset) };
   }
+}
+
+let badgeCache: Promise<BadgeDefinition[]> | undefined;
+
+/** Badge definitions from content/badges.json (cached in production). */
+export function getBadgeDefinitions(): Promise<BadgeDefinition[]> {
+  const load = async () => {
+    const file = path.join(CONTENT_DIR, "badges.json");
+    return parseOrThrow(badgesFileSchema, await readJson(file), file);
+  };
+  if (process.env.NODE_ENV !== "production") return load();
+  badgeCache ??= load().catch((err) => {
+    badgeCache = undefined;
+    throw err;
+  });
+  return badgeCache;
 }

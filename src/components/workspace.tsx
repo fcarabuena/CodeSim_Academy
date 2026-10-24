@@ -2,11 +2,15 @@
 
 import type { OnMount } from "@monaco-editor/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import type { Rewards } from "@/lib/gamification/award";
 import type { ChallengeType, Language } from "@/lib/content/schema";
 import type { GradeResult } from "@/lib/grading/grade";
+import { hintsRevealed } from "@/lib/hint-usage";
 import { getRunner, warmUp } from "@/lib/runners/browser/runners";
 import type { RunResult, RunSpec } from "@/lib/runners/types";
+import { toast } from "@/lib/toast";
 import { CodeEditor } from "./code-editor";
 import { TestResults } from "./test-results";
 
@@ -51,7 +55,26 @@ function writeDraft(key: string, value: string | null) {
 
 type Busy = null | "running" | "grading";
 type Tab = "output" | "tests";
-type Submission = GradeResult & { firstCompletion: boolean };
+type Submission = GradeResult & { firstCompletion: boolean; rewards?: Rewards };
+
+/** Celebrate what the server awarded, biggest news last so it stays on screen longest. */
+function showRewardToasts(r: Rewards) {
+  if (r.xpGained > 0) toast({ kind: "xp", icon: "✨", title: `+${r.xpGained} XP`, body: `${r.totalXp} XP in total` });
+  if (r.streak.extended) {
+    toast({
+      kind: "streak",
+      icon: "🔥",
+      title: r.streak.current === 1 ? "Streak started!" : `${r.streak.current}-day streak!`,
+      body: r.streak.current === 1 ? "Solve a challenge tomorrow to keep it going." : "Keep it up tomorrow.",
+    });
+  }
+  if (r.level.level > r.previousLevel) {
+    toast({ kind: "level", icon: "⬆️", title: `Level up! You're level ${r.level.level}`, body: "Great progress." }, 7000);
+  }
+  for (const b of r.badges) {
+    toast({ kind: "badge", icon: b.icon, title: `Badge unlocked: ${b.title}`, body: b.description }, 7000);
+  }
+}
 
 export function Workspace({
   trackSlug,
@@ -74,6 +97,7 @@ export function Workspace({
   completed: boolean;
   nextHref?: string;
 }) {
+  const router = useRouter();
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const codeRef = useRef(starter);
@@ -151,7 +175,14 @@ export function Workspace({
       const res = await fetch("/api/submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trackSlug, lessonSlug, code: codeRef.current, observations: result.observations }),
+        body: JSON.stringify({
+          trackSlug,
+          lessonSlug,
+          code: codeRef.current,
+          observations: result.observations,
+          hintsUsed: hintsRevealed(`${trackSlug}/${lessonSlug}`),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -159,9 +190,14 @@ export function Workspace({
         setTab("output");
         return;
       }
-      setSubmission(body as Submission);
-      if ((body as Submission).passed) setCompleted(true);
+      const submission = body as Submission;
+      setSubmission(submission);
       setTab("tests");
+      if (submission.passed) setCompleted(true);
+      if (submission.rewards) {
+        showRewardToasts(submission.rewards);
+        router.refresh(); // update server-rendered progress (track map, header) in the background
+      }
     } catch {
       setSubmitError("We couldn't reach the server. If the site was asleep, wait a few seconds and try again.");
     } finally {

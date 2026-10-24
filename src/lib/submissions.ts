@@ -3,8 +3,10 @@ import { z } from "zod";
 import { getExpectedResult, getLessonTests, getTrack, type LessonMeta } from "@/lib/content/loader";
 import type { FunctionTests, PageTests, QueryTests } from "@/lib/content/schema";
 import { db } from "@/lib/db";
+import { applyRewards, lockUser, type Rewards } from "@/lib/gamification/award";
 import { gradeFunction, gradePage, gradeQuery, type GradeResult } from "@/lib/grading/grade";
 import { observationsSchema, type Observations } from "@/lib/runners/types";
+import { sanitizeTimezone } from "@/lib/validation";
 
 export const MAX_CODE_LENGTH = 50_000;
 
@@ -15,12 +17,18 @@ export const submissionSchema = z.object({
   lessonSlug: slug,
   code: z.string().max(MAX_CODE_LENGTH, "Your code is too long."),
   observations: observationsSchema,
+  /** Lesson hints the student revealed (for the "No Hints Needed" badge). */
+  hintsUsed: z.number().int().min(0).max(50).default(0),
+  /** Browser timezone, used if the account doesn't have one yet (e.g. GitHub sign-ups). */
+  timezone: z.string().max(64).optional(),
 });
 export type SubmissionInput = z.infer<typeof submissionSchema>;
 
 export type SubmissionResponse = GradeResult & {
-  /** True the first time this student completes the lesson (XP arrives in Phase 5). */
+  /** True the first time this student completes the lesson. */
   firstCompletion: boolean;
+  /** XP, level, streak and badges earned. Only present when the submission passed. */
+  rewards?: Rewards;
 };
 
 export class SubmissionError extends Error {
@@ -55,13 +63,23 @@ export async function submit(userId: string, input: SubmissionInput): Promise<Su
 
   const lesson = await db.lesson.findFirst({
     where: { slug: meta.slug, track: { slug: meta.trackSlug } },
-    select: { id: true },
+    select: { id: true, xpReward: true },
   });
   if (!lesson) {
     throw new SubmissionError("This lesson isn't set up in the database yet. Ask your teacher to run the seed script.", 503);
   }
 
-  const firstCompletion = await db.$transaction(async (tx) => {
+  return db.$transaction(async (tx) => {
+    // Lock the student first: their concurrent submissions now run one at a
+    // time, so XP and badges can't be awarded twice.
+    const user = await lockUser(tx, userId);
+    const now = new Date();
+
+    const timezone = user.timezone ?? sanitizeTimezone(input.timezone) ?? null;
+    if (!user.timezone && timezone) {
+      await tx.user.update({ where: { id: userId }, data: { timezone } });
+    }
+
     await tx.submission.create({
       data: {
         userId,
@@ -70,6 +88,7 @@ export async function submit(userId: string, input: SubmissionInput): Promise<Su
         passed: grade.passed,
         score: grade.score,
         resultsJson: grade.results,
+        hintsUsed: input.hintsUsed,
       },
     });
 
@@ -77,7 +96,7 @@ export async function submit(userId: string, input: SubmissionInput): Promise<Su
       where: { userId_lessonId: { userId, lessonId: lesson.id } },
     });
     const alreadyCompleted = existing?.status === "COMPLETED";
-    const now = new Date();
+    const firstCompletion = grade.passed && !alreadyCompleted;
 
     await tx.lessonProgress.upsert({
       where: { userId_lessonId: { userId, lessonId: lesson.id } },
@@ -95,8 +114,18 @@ export async function submit(userId: string, input: SubmissionInput): Promise<Su
       },
     });
 
-    return grade.passed && !alreadyCompleted;
-  });
+    const rewards = grade.passed
+      ? await applyRewards(tx, {
+          userId,
+          user: { ...user, timezone },
+          lessonXp: lesson.xpReward,
+          firstCompletion,
+          hintsUsed: input.hintsUsed,
+          now,
+        })
+      : undefined;
 
-  return { ...grade, firstCompletion };
+    return { ...grade, firstCompletion, rewards };
+  // Generous limits: a free Neon database may be waking up from sleep.
+  }, { maxWait: 15_000, timeout: 20_000 });
 }

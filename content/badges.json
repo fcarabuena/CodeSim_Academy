@@ -1,0 +1,79 @@
+[
+  {
+    "slug": "first-steps",
+    "title": "First Steps",
+    "description": "Complete your first lesson.",
+    "icon": "👣",
+    "criteria": { "type": "lessons_completed", "count": 1 }
+  },
+  {
+    "slug": "no-hints",
+    "title": "No Hints Needed",
+    "description": "Complete a lesson without revealing any of its hints.",
+    "icon": "🧠",
+    "criteria": { "type": "no_hints" }
+  },
+  {
+    "slug": "track-finisher",
+    "title": "Track Finisher",
+    "description": "Complete every lesson in any track.",
+    "icon": "🏁",
+    "criteria": { "type": "any_track_completed" }
+  },
+  {
+    "slug": "web-builder",
+    "title": "Web Builder",
+    "description": "Finish the HTML & CSS track.",
+    "icon": "🧱",
+    "criteria": { "type": "track_completed", "track": "html-css" }
+  },
+  {
+    "slug": "responsive-ready",
+    "title": "Responsive Ready",
+    "description": "Finish the Bootstrap track.",
+    "icon": "📱",
+    "criteria": { "type": "track_completed", "track": "bootstrap" }
+  },
+  {
+    "slug": "js-starter",
+    "title": "JS Starter",
+    "description": "Finish the JavaScript track.",
+    "icon": "⚡",
+    "criteria": { "type": "track_completed", "track": "javascript" }
+  },
+  {
+    "slug": "pythonista",
+    "title": "Pythonista",
+    "description": "Finish the Python track.",
+    "icon": "🐍",
+    "criteria": { "type": "track_completed", "track": "python" }
+  },
+  {
+    "slug": "sql-explorer",
+    "title": "SQL Explorer",
+    "description": "Finish the SQL track.",
+    "icon": "🔍",
+    "criteria": { "type": "track_completed", "track": "sql" }
+  },
+  {
+    "slug": "streak-3",
+    "title": "3-Day Streak",
+    "description": "Solve a challenge on 3 days in a row.",
+    "icon": "🔥",
+    "criteria": { "type": "streak", "days": 3 }
+  },
+  {
+    "slug": "streak-7",
+    "title": "7-Day Streak",
+    "description": "Solve a challenge on 7 days in a row.",
+    "icon": "🌟",
+    "criteria": { "type": "streak", "days": 7 }
+  },
+  {
+    "slug": "rising-star",
+    "title": "Rising Star",
+    "description": "Reach level 3.",
+    "icon": "🚀",
+    "criteria": { "type": "level", "level": 3 }
+  }
+]
