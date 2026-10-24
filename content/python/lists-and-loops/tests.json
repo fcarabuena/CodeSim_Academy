@@ -1,0 +1,9 @@
+{
+  "functionName": "longest_word",
+  "tests": [
+    { "id": "animals", "kind": "returns", "name": "Finds \"giraffe\" in [\"cat\", \"giraffe\", \"dog\"]", "args": [["cat", "giraffe", "dog"]], "expected": "giraffe" },
+    { "id": "tie", "kind": "returns", "name": "Returns the first word when two are equally long", "args": [["abc", "abd", "a"]], "expected": "abc", "hint": "Only replace the best word when the new one is strictly longer (>)." },
+    { "id": "last", "kind": "returns", "name": "Works when the longest word is last", "args": [["hi", "hey", "hello"]], "expected": "hello" },
+    { "id": "empty", "kind": "returns", "name": "An empty list gives an empty string", "args": [[]], "expected": "", "hint": "Start with longest = \"\" so an empty list returns \"\"." }
+  ]
+}

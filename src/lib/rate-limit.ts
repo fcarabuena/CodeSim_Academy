@@ -46,6 +46,9 @@ export const authLimiter = createRateLimiter({ limit: 10, windowMs: 15 * 60_000 
 /** Code submissions: 20 per user per minute. */
 export const submissionLimiter = createRateLimiter({ limit: 20, windowMs: 60_000 });
 
+/** Joining a class by code: 10 attempts per user per 10 minutes (stops code guessing). */
+export const classJoinLimiter = createRateLimiter({ limit: 10, windowMs: 10 * 60_000 });
+
 /** Best-effort client IP from proxy headers (Render sets x-forwarded-for). */
 export function clientIp(headers: Headers): string {
   const fwd = headers.get("x-forwarded-for");

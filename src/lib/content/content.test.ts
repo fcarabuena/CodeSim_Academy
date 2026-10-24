@@ -50,7 +50,7 @@ function observeJs(code: string, functionName: string | undefined, calls: { id: 
   const lines: string[] = [];
   const log = (...a: unknown[]) => lines.push(a.map((v) => (typeof v === "string" ? v : JSON.stringify(v))).join(" "));
   const context = vm.createContext({ console: { log, info: log, warn: log, error: log } });
-  const lookup = functionName ? `;typeof ${functionName} === "function" ? ${functionName} : undefined` : "undefined";
+  const lookup = functionName ? `typeof ${functionName} === "function" ? ${functionName} : undefined` : "undefined";
   let fn: unknown;
   try {
     fn = vm.runInContext(`(function () {\n${code}\nreturn (${lookup});\n})()`, context, { timeout: 1000 });

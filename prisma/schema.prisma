@@ -39,9 +39,11 @@ model User {
   timezone       String?
   createdAt      DateTime  @default(now())
 
-  submissions Submission[]
-  progress    LessonProgress[]
-  badges      UserBadge[]
+  submissions   Submission[]
+  progress      LessonProgress[]
+  badges        UserBadge[]
+  classesTaught Classroom[]       @relation("TeacherClasses")
+  memberships   ClassMembership[]
 }
 
 model Track {
@@ -123,4 +125,31 @@ model UserBadge {
   badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
 
   @@id([userId, badgeId])
+}
+
+/// A teacher's class. Students join with `code`.
+model Classroom {
+  id        String   @id @default(cuid())
+  name      String
+  /// Short join code shared with students, e.g. "K7Q4MZ".
+  code      String   @unique
+  teacherId String
+  createdAt DateTime @default(now())
+
+  teacher User              @relation("TeacherClasses", fields: [teacherId], references: [id], onDelete: Cascade)
+  members ClassMembership[]
+
+  @@index([teacherId])
+}
+
+model ClassMembership {
+  classroomId String
+  userId      String
+  joinedAt    DateTime @default(now())
+
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([classroomId, userId])
+  @@index([userId])
 }

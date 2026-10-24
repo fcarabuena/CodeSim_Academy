@@ -1,0 +1,28 @@
+{
+  "tests": [
+    {
+      "id": "h1-colour",
+      "name": "The heading is blue (#2563eb)",
+      "check": { "kind": "style", "selector": "h1", "property": "color", "equals": "#2563eb" },
+      "hint": "Add a rule h1 { color: #2563eb; } inside the <style> tag."
+    },
+    {
+      "id": "highlight-background",
+      "name": "Highlighted text has a yellow background",
+      "check": { "kind": "style", "selector": ".highlight", "property": "background-color", "equals": "yellow" },
+      "hint": "Class selectors start with a dot: .highlight { background-color: yellow; }"
+    },
+    {
+      "id": "intro-bold",
+      "name": "The intro paragraph is bold",
+      "check": { "kind": "style", "selector": "#intro", "property": "font-weight", "equals": "bold" },
+      "hint": "Id selectors start with #: #intro { font-weight: bold; }"
+    },
+    {
+      "id": "html-unchanged",
+      "name": "The page still has its two highlighted words",
+      "check": { "kind": "count", "selector": ".highlight", "min": 2 },
+      "hint": "Only change the CSS: keep both <span class=\"highlight\"> elements."
+    }
+  ]
+}

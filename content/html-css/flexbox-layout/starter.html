@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Flexbox</title>
+    <style>
+      body { font-family: sans-serif; margin: 16px; }
+      .menu { background: #1e293b; padding: 12px; }
+      .menu a { color: white; text-decoration: none; }
+      .card { background: #e0e7ff; padding: 16px; border-radius: 8px; width: 160px; }
+
+      /* 1. Make .menu a flex container with justify-content: space-between */
+
+      /* 2. Make .cards a flex container that wraps, with a 16px gap */
+    </style>
+  </head>
+  <body>
+    <nav class="menu">
+      <a href="#">Home</a>
+      <a href="#">Lessons</a>
+      <a href="#">Profile</a>
+    </nav>
+
+    <h1>Popular lessons</h1>
+    <div class="cards">
+      <div class="card">HTML basics</div>
+      <div class="card">CSS colours</div>
+      <div class="card">Flexbox</div>
+      <div class="card">JavaScript</div>
+    </div>
+  </body>
+</html>

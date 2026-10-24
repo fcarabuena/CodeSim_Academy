@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { JoinClassForm } from "@/components/class-forms";
 import { LevelCard, ProgressBar, StreakCard } from "@/components/stats-ui";
 import { listTracks } from "@/lib/content/loader";
 import { getProgressMap } from "@/lib/progress";
@@ -135,6 +136,12 @@ export default async function DashboardPage() {
           </p>
         </section>
       </div>
+
+      <section className="card mt-6 md:max-w-md">
+        <h2 className="font-semibold">Join a class</h2>
+        <p className="mt-1 mb-3 text-sm text-muted">Got a code from your teacher? Enter it here so they can follow your progress.</p>
+        <JoinClassForm />
+      </section>
     </div>
   );
 }

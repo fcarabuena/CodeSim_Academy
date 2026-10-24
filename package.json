@@ -16,7 +16,9 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "content:expected": "tsx scripts/content-expected.ts"
+    "content:expected": "tsx scripts/content-expected.ts",
+    "set-role": "tsx scripts/set-role.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

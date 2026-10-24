@@ -1,6 +1,6 @@
 import type { DomCheck, FunctionTests, PageTests, QueryResult, QueryTests } from "@/lib/content/schema";
 import { timeoutMessage, type Observations, type ProbeObservation } from "@/lib/runners/types";
-import { compareRows, deepEqual, normalizeOutput, sameColumns, show } from "./compare";
+import { compareRows, deepEqual, normalizeCss, normalizeOutput, sameColumns, show, showIn } from "./compare";
 
 /**
  * Turns runner observations into per-test results. Runs on the server only,
@@ -103,8 +103,8 @@ export function evaluateDomCheck(check: DomCheck, obs: ProbeObservation | undefi
 
     case "style": {
       if (obs.count === 0) return `Couldn't find any element matching ${sel}.`;
-      const actual = (obs.style ?? "").replace(/\s+/g, "").toLowerCase();
-      const expected = check.equals.replace(/\s+/g, "").toLowerCase();
+      const actual = normalizeCss(obs.style ?? "");
+      const expected = normalizeCss(check.equals);
       return actual === expected ? null : `${sel} has ${check.property}: ${obs.style ?? "(none)"}, which isn't what we expected.`;
     }
   }
@@ -125,7 +125,12 @@ function outputDiff(expected: string, actual: string): string {
   return `Expected your program to print:\n${expected}\n\nbut it printed:\n${actual.length > 600 ? `${actual.slice(0, 600)}…` : actual}`;
 }
 
-export function gradeFunction(tests: FunctionTests, obs: Extract<Observations, { type: "function" }>): GradeResult {
+export function gradeFunction(
+  tests: FunctionTests,
+  obs: Extract<Observations, { type: "function" }>,
+  language: "javascript" | "python" = "javascript",
+): GradeResult {
+  const fmt = (v: unknown, max?: number) => showIn(language, v, max);
   const stdout = normalizeOutput(obs.stdout);
   const fatal = obs.timedOut ? timeoutMessage() : obs.error ? `Your code stopped with an error:\n${obs.error}` : null;
 
@@ -136,12 +141,16 @@ export function gradeFunction(tests: FunctionTests, obs: Extract<Observations, {
         const expected = normalizeOutput(t.expected);
         return result(t, stdout === expected ? null : outputDiff(expected, stdout));
       }
-      const call = `${tests.functionName}(${t.args.map((a) => show(a, 40)).join(", ")})`;
+      const call = `${tests.functionName}(${t.args.map((a) => fmt(a, 40)).join(", ")})`;
       const r = obs.returns[t.id];
       if (!r) return result(t, `We couldn't call ${call}. Did you define a function called ${tests.functionName}?`);
       if (r.error) return result(t, `${call} raised an error:\n${r.error}`);
       if (r.undefined) return result(t, `${call} returned undefined. Did you forget to \`return\` the result?`);
-      return result(t, deepEqual(r.value, t.expected) ? null : `${call} returned ${show(r.value)}, but expected ${show(t.expected)}.`);
+      if (deepEqual(r.value, t.expected)) return result(t, null);
+      if (language === "python" && r.value === null && t.expected !== null) {
+        return result(t, `${call} returned None. Did you forget to \`return\` the result?`);
+      }
+      return result(t, `${call} returned ${fmt(r.value)}, but expected ${fmt(t.expected)}.`);
     }),
   );
 }

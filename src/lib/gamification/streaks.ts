@@ -58,14 +58,18 @@ export function recordSolve(state: StreakState, now: Date, timeZone?: string | n
  * The streak to display at `now`: the stored streak is only still alive if
  * the student solved something today or yesterday.
  */
-export function activeStreak(state: StreakState, now: Date, timeZone?: string | null): number {
+export function activeStreak(
+  state: Pick<StreakState, "currentStreak" | "lastActiveDate">,
+  now: Date,
+  timeZone?: string | null,
+): number {
   if (!state.lastActiveDate) return 0;
   const gap = daysBetween(localDay(state.lastActiveDate, timeZone), localDay(now, timeZone));
   return gap === 0 || gap === 1 ? state.currentStreak : 0;
 }
 
 /** True when the streak is alive but nothing has been solved yet today. */
-export function streakAtRisk(state: StreakState, now: Date, timeZone?: string | null): boolean {
+export function streakAtRisk(state: Pick<StreakState, "lastActiveDate">, now: Date, timeZone?: string | null): boolean {
   if (!state.lastActiveDate) return false;
   return daysBetween(localDay(state.lastActiveDate, timeZone), localDay(now, timeZone)) === 1;
 }

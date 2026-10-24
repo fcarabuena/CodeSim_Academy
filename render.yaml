@@ -1,0 +1,35 @@
+# Render Blueprint: one free web service. The database is a free Neon project
+# (Render's free Postgres is deleted after ~30 days, so it isn't used here).
+# Setup steps: see "Deploy for free" in README.md.
+services:
+  - type: web
+    name: codesim-academy
+    runtime: node
+    plan: free
+    # Put the app in the same area as your Neon database so each query is fast.
+    # Neon "AWS US East 2 (Ohio)" -> ohio. Other options: oregon, virginia,
+    # frankfurt, singapore.
+    region: ohio
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
+    startCommand: npm start
+    # Doesn't touch the database, so a sleeping Neon compute never fails it.
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Neon pooled connection string (host contains "-pooler").
+      - key: DATABASE_URL
+        sync: false
+      # Neon direct connection string (no "-pooler"), used for migrations.
+      - key: DIRECT_URL
+        sync: false
+      - key: AUTH_SECRET
+        generateValue: true
+      # Your public address, e.g. https://codesim-academy.onrender.com
+      - key: AUTH_URL
+        sync: false
+      # Optional: GitHub login. Leave empty to hide the GitHub button.
+      - key: GITHUB_ID
+        sync: false
+      - key: GITHUB_SECRET
+        sync: false

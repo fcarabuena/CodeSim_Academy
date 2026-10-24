@@ -1,0 +1,34 @@
+{
+  "tests": [
+    {
+      "id": "h2",
+      "name": "There is an <h2> section heading",
+      "check": { "kind": "text", "selector": "body h2", "text": { "matches": "\\S" } },
+      "hint": "Add something like <h2>My plan</h2> under the <h1>."
+    },
+    {
+      "id": "strong-in-paragraph",
+      "name": "A paragraph has important words in <strong>",
+      "check": { "kind": "text", "selector": "p strong", "text": { "matches": "\\S" } },
+      "hint": "Put the <strong> tag inside a <p>, around a few words."
+    },
+    {
+      "id": "mdn-link",
+      "name": "There is a link to developer.mozilla.org",
+      "check": { "kind": "count", "selector": "a[href*='developer.mozilla.org']", "min": 1 },
+      "hint": "Check the href attribute: href=\"https://developer.mozilla.org\"."
+    },
+    {
+      "id": "link-text",
+      "name": "The link has descriptive text",
+      "check": { "kind": "text", "selector": "a[href*='developer.mozilla.org']", "text": { "matches": "\\w{3,}" } },
+      "hint": "Put words between <a ...> and </a>, such as \"read the MDN Web Docs\"."
+    },
+    {
+      "id": "list-items",
+      "name": "A bulleted list has at least three items",
+      "check": { "kind": "count", "selector": "ul > li", "min": 3 },
+      "hint": "Each item needs its own <li>...</li> inside the <ul>."
+    }
+  ]
+}

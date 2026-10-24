@@ -1,0 +1,29 @@
+{
+  "columns": [
+    "id",
+    "name",
+    "status"
+  ],
+  "rows": [
+    [
+      1,
+      "Amara Okafor",
+      "delivered"
+    ],
+    [
+      2,
+      "Sofia Rossi",
+      "delivered"
+    ],
+    [
+      4,
+      "Maria Santos",
+      "delivered"
+    ],
+    [
+      9,
+      "Emma Dubois",
+      "delivered"
+    ]
+  ]
+}

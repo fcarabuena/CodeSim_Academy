@@ -1,0 +1,8 @@
+{
+  "functionName": "greet",
+  "tests": [
+    { "id": "ada", "kind": "returns", "name": "greet(\"Ada\") returns \"Hello, Ada!\"", "args": ["Ada"], "expected": "Hello, Ada!" },
+    { "id": "linus", "kind": "returns", "name": "greet(\"Linus\") returns \"Hello, Linus!\"", "args": ["Linus"], "expected": "Hello, Linus!", "hint": "Use the name parameter instead of typing a name into the text." },
+    { "id": "spaces", "kind": "returns", "name": "Works with longer names", "args": ["Grace Hopper"], "expected": "Hello, Grace Hopper!" }
+  ]
+}

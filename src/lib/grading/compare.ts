@@ -47,6 +47,29 @@ export function show(value: unknown, max = 120): string {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
 
+/** Python's repr() of a JSON value: None/True/False, 'quoted' strings, lists and dicts. */
+export function pythonRepr(value: unknown): string {
+  if (value === null || value === undefined) return "None";
+  if (value === true) return "True";
+  if (value === false) return "False";
+  if (typeof value === "number") return String(value);
+  if (typeof value === "string") {
+    // Like Python: single quotes unless the text contains one and no double quotes.
+    const quote = value.includes("'") && !value.includes('"') ? '"' : "'";
+    const escaped = value.replaceAll("\\", "\\\\").replaceAll("\n", "\\n").replaceAll(quote, `\\${quote}`);
+    return quote + escaped + quote;
+  }
+  if (Array.isArray(value)) return `[${value.map(pythonRepr).join(", ")}]`;
+  return `{${Object.entries(value as Record<string, unknown>).map(([k, v]) => `${pythonRepr(k)}: ${pythonRepr(v)}`).join(", ")}}`;
+}
+
+/** Render a value the way the student's language would print it. */
+export function showIn(language: "javascript" | "python", value: unknown, max = 120): string {
+  if (language === "javascript") return show(value, max);
+  const s = pythonRepr(value);
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+}
+
 // --- SQL result comparison ---------------------------------------------------
 
 export type SqlValue = string | number | null;
@@ -106,4 +129,53 @@ export function compareRows(expected: Row[], actual: Row[], ordered: boolean): R
 /** Column names compare case-insensitively (SQL identifiers usually are). */
 export function sameColumns(expected: string[], actual: string[]): boolean {
   return expected.length === actual.length && expected.every((c, i) => c.toLowerCase() === actual[i]?.toLowerCase());
+}
+
+// --- CSS value comparison ------------------------------------------------------
+
+const NAMED_COLORS: Record<string, string> = {
+  black: "0, 0, 0",
+  white: "255, 255, 255",
+  red: "255, 0, 0",
+  green: "0, 128, 0",
+  blue: "0, 0, 255",
+  yellow: "255, 255, 0",
+  orange: "255, 165, 0",
+  purple: "128, 0, 128",
+  pink: "255, 192, 203",
+  gray: "128, 128, 128",
+  grey: "128, 128, 128",
+  navy: "0, 0, 128",
+  teal: "0, 128, 128",
+  gold: "255, 215, 0",
+  coral: "255, 127, 80",
+  tomato: "255, 99, 71",
+  crimson: "220, 20, 60",
+  lime: "0, 255, 0",
+  aqua: "0, 255, 255",
+  silver: "192, 192, 192",
+  maroon: "128, 0, 0",
+  olive: "128, 128, 0",
+};
+
+const FONT_WEIGHTS: Record<string, string> = { normal: "400", bold: "700" };
+
+/**
+ * Canonical form of a CSS value so "#ff0", "yellow" and "rgb(255,255,0)" all
+ * compare equal (browsers report computed colours as rgb(), but lesson authors
+ * and some test environments use other forms).
+ */
+export function normalizeCss(value: string): string {
+  let v = value.trim().toLowerCase().replace(/\s+/g, " ");
+  if (FONT_WEIGHTS[v]) return FONT_WEIGHTS[v];
+  if (NAMED_COLORS[v]) return `rgb(${NAMED_COLORS[v]})`;
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(v);
+  if (hex) {
+    const h = hex[1]!.length === 3 ? [...hex[1]!].map((c) => c + c).join("") : hex[1]!;
+    return `rgb(${parseInt(h.slice(0, 2), 16)}, ${parseInt(h.slice(2, 4), 16)}, ${parseInt(h.slice(4, 6), 16)})`;
+  }
+  const rgb = /^rgba?\(\s*(\d+)[ ,]+(\d+)[ ,]+(\d+)(?:\s*[,/]\s*(1|1\.0+|100%))?\s*\)$/.exec(v);
+  if (rgb) return `rgb(${rgb[1]}, ${rgb[2]}, ${rgb[3]})`;
+  v = v.replace(/\s*,\s*/g, ", ");
+  return v;
 }

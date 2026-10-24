@@ -1,0 +1,17 @@
+{
+  "dataset": "shop",
+  "ordered": true,
+  "tests": [
+    {
+      "id": "columns",
+      "check": "columns",
+      "name": "Returns the name and price columns"
+    },
+    {
+      "id": "rows",
+      "check": "rows",
+      "name": "Returns the 3 most expensive products, most expensive first",
+      "hint": "Sort with ORDER BY price DESC, then keep three rows with LIMIT 3."
+    }
+  ]
+}

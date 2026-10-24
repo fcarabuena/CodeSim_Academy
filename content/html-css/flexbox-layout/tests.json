@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "id": "menu-flex",
+      "name": "The menu uses flexbox",
+      "check": { "kind": "style", "selector": ".menu", "property": "display", "equals": "flex" },
+      "hint": "Add display: flex; to the .menu rule."
+    },
+    {
+      "id": "menu-space-between",
+      "name": "Menu links are spread out with space-between",
+      "check": { "kind": "style", "selector": ".menu", "property": "justify-content", "equals": "space-between" }
+    },
+    {
+      "id": "cards-flex",
+      "name": "The cards container uses flexbox",
+      "check": { "kind": "style", "selector": ".cards", "property": "display", "equals": "flex" },
+      "hint": "Write a new rule for .cards with display: flex;"
+    },
+    {
+      "id": "cards-wrap",
+      "name": "Cards wrap onto new lines",
+      "check": { "kind": "style", "selector": ".cards", "property": "flex-wrap", "equals": "wrap" }
+    },
+    {
+      "id": "cards-gap",
+      "name": "Cards have a 16px gap",
+      "check": { "kind": "style", "selector": ".cards", "property": "gap", "equals": "16px" },
+      "hint": "gap: 16px; goes on the container (.cards), not on each .card."
+    },
+    {
+      "id": "html-unchanged",
+      "name": "The page still has its menu links and cards",
+      "check": { "kind": "count", "selector": ".cards > .card", "min": 4 }
+    }
+  ]
+}

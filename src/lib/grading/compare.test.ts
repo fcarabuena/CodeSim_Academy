@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareRows, deepEqual, normalizeOutput, sameColumns, show } from "./compare";
+import { compareRows, deepEqual, normalizeCss, normalizeOutput, sameColumns, show } from "./compare";
 
 describe("deepEqual", () => {
   it("compares primitives, arrays and objects structurally", () => {
@@ -82,5 +82,20 @@ describe("sameColumns", () => {
     expect(sameColumns(["name", "price"], ["NAME", "Price"])).toBe(true);
     expect(sameColumns(["name", "price"], ["price", "name"])).toBe(false);
     expect(sameColumns(["name"], ["name", "price"])).toBe(false);
+  });
+});
+
+describe("normalizeCss", () => {
+  it("treats hex, rgb(), rgba(..., 1) and named colours as the same colour", () => {
+    const yellow = "rgb(255, 255, 0)";
+    for (const v of ["#ff0", "#FFFF00", "yellow", "rgb(255,255,0)", "rgba(255, 255, 0, 1)", "rgb(255 255 0)"]) {
+      expect(normalizeCss(v), v).toBe(yellow);
+    }
+    expect(normalizeCss("rgba(255, 255, 0, 0.5)")).not.toBe(yellow);
+  });
+
+  it("maps font-weight keywords to numbers and tidies spacing", () => {
+    expect(normalizeCss("bold")).toBe("700");
+    expect(normalizeCss(" Space-Between ")).toBe("space-between");
   });
 });

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { logOutAction } from "@/app/(auth)/actions";
+import { getStudentClassrooms } from "@/lib/classes";
 import { LevelCard, ProgressBar, StreakCard } from "@/components/stats-ui";
 import { listTracks } from "@/lib/content/loader";
 import { getProgressMap } from "@/lib/progress";
@@ -13,11 +14,12 @@ const dateFormat = new Intl.DateTimeFormat("en", { day: "numeric", month: "short
 
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [summary, badges, progress, tracks] = await Promise.all([
+  const [summary, badges, progress, tracks, classes] = await Promise.all([
     getStudentSummary(user.id),
     getBadgeShelf(user.id),
     getProgressMap(user.id),
     listTracks(),
+    getStudentClassrooms(user.id),
   ]);
   if (!summary) return null;
 
@@ -84,6 +86,28 @@ export default async function ProfilePage() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-bold">Your classes</h2>
+        {classes.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">
+            You haven&apos;t joined a class. If your teacher gave you a code, enter it on your{" "}
+            <Link href="/dashboard" className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+              dashboard
+            </Link>
+            .
+          </p>
+        ) : (
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {classes.map((c, i) => (
+              <li key={i} className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm">
+                🏫 {c.classroom.name}
+                {c.classroom.teacher.name && <span className="text-muted"> · {c.classroom.teacher.name}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="mt-10">

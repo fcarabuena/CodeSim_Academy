@@ -1,0 +1,18 @@
+{
+  "dataset": "shop",
+  "ordered": false,
+  "tests": [
+    {
+      "id": "columns",
+      "check": "columns",
+      "name": "Returns the id, name and status columns",
+      "hint": "Choose exactly three columns: orders.id, customers.name, orders.status"
+    },
+    {
+      "id": "rows",
+      "check": "rows",
+      "name": "Returns every delivered order with its customer's name",
+      "hint": "Join customers ON customers.id = orders.customer_id, then filter WHERE orders.status = 'delivered'."
+    }
+  ]
+}

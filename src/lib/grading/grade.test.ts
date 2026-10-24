@@ -102,6 +102,17 @@ describe("gradeFunction", () => {
     expect(slow.score).toBe(0);
   });
 
+  it("speaks Python to Python students", () => {
+    const py: FunctionTests = {
+      functionName: "greet",
+      tests: [{ id: "g", kind: "returns", name: "greet", args: ["Ada"], expected: "Hello, Ada!" }],
+    };
+    const none = gradeFunction(py, { type: "function", stdout: "", returns: { g: { value: null } } }, "python");
+    expect(none.results[0]!.message).toBe("greet('Ada') returned None. Did you forget to `return` the result?");
+    const wrong = gradeFunction(py, { type: "function", stdout: "", returns: { g: { value: [true, "it's"] } } }, "python");
+    expect(wrong.results[0]!.message).toBe(`greet('Ada') returned [True, "it's"], but expected 'Hello, Ada!'.`);
+  });
+
   it("compares printed output, ignoring trailing whitespace", () => {
     const out: FunctionTests = { tests: [{ id: "o", kind: "stdout", name: "prints", expected: "Hello\nWorld" }] };
     expect(gradeFunction(out, { type: "function", stdout: "Hello  \r\nWorld\n", returns: {} }).passed).toBe(true);

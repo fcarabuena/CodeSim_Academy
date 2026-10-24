@@ -1,0 +1,9 @@
+{
+  "functionName": "sumOfEvens",
+  "tests": [
+    { "id": "mixed", "kind": "returns", "name": "sumOfEvens([1, 2, 3, 4]) is 6", "args": [[1, 2, 3, 4]], "expected": 6 },
+    { "id": "empty", "kind": "returns", "name": "An empty array gives 0", "args": [[]], "expected": 0, "hint": "Start your total at 0 so an empty array still returns 0." },
+    { "id": "all-odd", "kind": "returns", "name": "No even numbers gives 0", "args": [[7, 9, 11]], "expected": 0 },
+    { "id": "negatives", "kind": "returns", "name": "Works with negative and larger numbers", "args": [[10, -2, 5, 100]], "expected": 108, "hint": "-2 is even too, so it counts: 10 + (-2) + 100 = 108." }
+  ]
+}

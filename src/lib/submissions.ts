@@ -48,7 +48,7 @@ export async function gradeObservations(meta: LessonMeta, obs: Observations): Pr
     case "page":
       return gradePage(tests as PageTests, obs);
     case "function":
-      return gradeFunction(tests as FunctionTests, obs);
+      return gradeFunction(tests as FunctionTests, obs, meta.language === "python" ? "python" : "javascript");
     case "query":
       return gradeQuery(tests as QueryTests, await getExpectedResult(meta), obs);
   }

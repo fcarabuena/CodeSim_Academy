@@ -1,0 +1,20 @@
+{
+  "columns": [
+    "name",
+    "price"
+  ],
+  "rows": [
+    [
+      "Noise-Cancelling Headphones",
+      149
+    ],
+    [
+      "Mechanical Keyboard",
+      79
+    ],
+    [
+      "Laptop Backpack",
+      49.99
+    ]
+  ]
+}
