@@ -1,0 +1,20 @@
+{
+  "columns": [
+    "name",
+    "price"
+  ],
+  "rows": [
+    [
+      "Wireless Mouse",
+      24.99
+    ],
+    [
+      "Mechanical Keyboard",
+      79
+    ],
+    [
+      "USB-C Charger",
+      19.5
+    ]
+  ]
+}

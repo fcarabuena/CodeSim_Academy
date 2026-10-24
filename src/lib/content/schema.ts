@@ -115,11 +115,27 @@ export const queryTestsSchema = z.object({
   dataset: slug,
   /** Compare rows in order (true when the lesson asks for ORDER BY). */
   ordered: z.boolean().default(false),
-  /** Also require the same column names as the solution. */
-  checkColumns: z.boolean().default(true),
-  /** Test names; the expected result comes from solution.sql. */
-  tests: z.array(z.object(testBase)).min(1),
+  /**
+   * The expected result is generated from solution.sql into expected.json
+   * (npm run content:expected), so answers stay on the server.
+   */
+  tests: z
+    .array(
+      z.object({
+        ...testBase,
+        /** columns: same column names as the solution. rows: same rows (respecting `ordered`). */
+        check: z.enum(["columns", "rows"]),
+      }),
+    )
+    .min(1),
 });
+
+/** Result of running solution.sql, stored next to it as expected.json. */
+export const queryResultSchema = z.object({
+  columns: z.array(z.string()),
+  rows: z.array(z.array(z.union([z.string(), z.number(), z.null()]))),
+});
+export type QueryResult = z.infer<typeof queryResultSchema>;
 
 export const testsSchemaByType = {
   page: pageTestsSchema,

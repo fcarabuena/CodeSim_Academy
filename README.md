@@ -3,9 +3,9 @@
 An e-learning platform where students learn programming through interactive,
 auto-graded coding challenges and earn XP, levels, streaks and badges.
 
-> **Status:** Phase 2 of 6 (setup, auth, lesson content, tracks and lesson pages,
-> code editor). Running code, grading and XP arrive in the next phases; the full
-> free deployment guide (Render + Neon) arrives in Phase 6.
+> **Status:** Phase 3 of 6 (setup, auth, lessons, code editor, in-browser code
+> runners, grading, submissions and progress). XP, badges and leaderboards arrive
+> next; the full free deployment guide (Render + Neon) arrives in Phase 6.
 
 ## Tech stack
 
@@ -90,6 +90,7 @@ Any other PostgreSQL 13+ server also works: put its URL in both `DATABASE_URL` a
 | `npm run db:migrate` | Create a new migration after editing `prisma/schema.prisma` |
 | `npm run db:deploy` | Apply migrations |
 | `npm run db:seed` | Sync tracks and lessons from `/content` into the database (safe to re-run) |
+| `npm run content:expected` | Regenerate `expected.json` for SQL lessons after changing a solution |
 | `npm run db:studio` | Browse the database |
 
 ## Project layout
@@ -104,8 +105,49 @@ src/lib/rate-limit.ts in-memory rate limiter (auth + submissions)
 src/app/(auth)/      log in, sign up, server actions
 src/app/tracks/      tracks list, track map, lesson page
 src/lib/content/     lesson file loader + Zod schemas for /content
+src/lib/runners/     Runner interface, browser runners, page probe, loop guard
+src/lib/grading/     pure grading functions (server-side)
+src/app/api/submissions/  grades and saves submissions
+public/runners/      worker scripts for JavaScript, Python (Pyodide), SQL (sql.js)
 content/             lessons (see "Writing lessons")
 ```
+
+## How code runs and gets graded
+
+All student code runs **in the student's browser**, so the free server never
+executes code:
+
+| Lesson type | Runs in | Time limit |
+| --- | --- | --- |
+| HTML / CSS / Bootstrap ("Build the page") | the visible preview iframe | loops in the page's scripts are stopped after 1 s; 5 s overall |
+| JavaScript ("Write the function") | a Web Worker | 5 s, then the worker is killed |
+| Python | Pyodide 0.29 (WebAssembly) in a Web Worker, loaded from the jsDelivr CDN | 5 s (download time not counted) |
+| SQL ("Query the data") | sql.js (SQLite in WebAssembly) in a Web Worker, fresh copy of the dataset each run | 5 s |
+
+Every runner lives inside an iframe with `sandbox="allow-scripts"` and **no**
+`allow-same-origin`, so student code gets an opaque origin: it can't read the
+app's cookies, call its API or touch the main page. Workers inside that iframe can
+be killed instantly, so an infinite loop never freezes the tab. Page previews
+can't use a worker (they need a DOM), so their scripts get automatic loop
+protection (`src/lib/runners/loop-guard.ts`), as on CodePen.
+
+**Grading.** The browser runner only *observes* (printed output, return values,
+DOM facts, result rows) and sends that to `POST /api/submissions`. The server
+grades the observations against `tests.json` (and `expected.json` for SQL), which
+**never leave the server**, then saves the submission and the student's progress.
+A client-sent "passed" is never trusted. Submissions are rate-limited (20 per
+minute per student).
+
+**Known limitation.** Because the code runs on the student's device, a determined
+student could hand-craft observations (for example, post the expected output
+without writing the code). The server can't detect that without running the code
+itself. That's acceptable for a learning platform; for exams, plug in a
+server-side runner (below).
+
+**Adding a server-side runner later** (planned: self-hosted Judge0 or Piston for
+Java, PHP, Node, Django, Flask...): implement the `Runner` interface in
+`src/lib/runners/types.ts` so it produces the same `Observations`, and the
+existing grading and submission code works unchanged.
 
 ## Writing lessons
 
@@ -135,9 +177,13 @@ hints:                  # revealed one at a time
 ```
 
 The exact formats of `tests.json` are defined (and documented) in
-`src/lib/content/schema.ts`. `npm test` validates every lesson, so a typo fails the
-tests instead of breaking a page. After adding or changing lessons, run
-`npm run db:seed` again.
+`src/lib/content/schema.ts`. For SQL lessons, run `npm run content:expected` to
+generate `expected.json` from `solution.sql`.
+
+`npm test` validates every lesson: files load, nothing secret reaches the browser,
+and (for HTML, JavaScript and SQL) the solution passes every test while the starter
+code does not. A typo fails the tests instead of breaking a page. After adding or
+changing lessons, run `npm run db:seed` again.
 
 ## Notes
 

@@ -1,15 +1,16 @@
 {
   "dataset": "shop",
   "ordered": false,
-  "checkColumns": true,
   "tests": [
     {
       "id": "columns",
+      "check": "columns",
       "name": "Returns exactly the name and price columns",
       "hint": "Replace SELECT * with SELECT name, price."
     },
     {
       "id": "rows",
+      "check": "rows",
       "name": "Returns only Electronics products under 100",
       "hint": "You need two conditions joined with AND: one on category, one on price."
     }

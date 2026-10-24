@@ -4,8 +4,9 @@ import { notFound } from "next/navigation";
 import { Hints } from "@/components/hints";
 import { Markdown } from "@/components/markdown";
 import { Workspace } from "@/components/workspace";
-import { getLesson, getTrack, neighbours } from "@/lib/content/loader";
-import { lessonKey } from "@/lib/progress";
+import { auth } from "@/auth";
+import { getLesson, getRunSpec, getTrack, neighbours } from "@/lib/content/loader";
+import { getProgressMap, lessonKey } from "@/lib/progress";
 
 export async function generateMetadata({ params }: PageProps<"/tracks/[track]/[lesson]">): Promise<Metadata> {
   const { track, lesson } = await params;
@@ -20,9 +21,14 @@ const DIFFICULTY_STYLE = {
 
 export default async function LessonPage({ params }: PageProps<"/tracks/[track]/[lesson]">) {
   const { track: trackSlug, lesson: lessonSlug } = await params;
-  const [track, lesson] = await Promise.all([getTrack(trackSlug), getLesson(trackSlug, lessonSlug)]);
+  const [track, lesson, session] = await Promise.all([getTrack(trackSlug), getLesson(trackSlug, lessonSlug), auth()]);
   if (!track || !lesson) notFound();
   const { prev, next } = neighbours(track, lesson.slug);
+  const userId = session?.user?.id;
+  const [spec, progress] = await Promise.all([
+    getRunSpec(lesson),
+    userId ? getProgressMap(userId, track.slug) : null,
+  ]);
 
   return (
     <div className="lg:grid lg:h-[calc(100dvh-4rem)] lg:grid-cols-2">
@@ -78,10 +84,15 @@ export default async function LessonPage({ params }: PageProps<"/tracks/[track]/
 
       <div className="border-t border-border bg-surface lg:min-h-0 lg:border-t-0">
         <Workspace
-          lessonKey={lessonKey(track.slug, lesson.slug)}
+          trackSlug={track.slug}
+          lessonSlug={lesson.slug}
           language={lesson.language}
           type={lesson.type}
           starter={lesson.starter}
+          spec={spec}
+          loggedIn={Boolean(userId)}
+          completed={progress?.get(lessonKey(track.slug, lesson.slug)) === "COMPLETED"}
+          nextHref={next ? `/tracks/${track.slug}/${next.slug}` : undefined}
         />
       </div>
     </div>
