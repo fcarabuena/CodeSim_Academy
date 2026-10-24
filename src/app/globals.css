@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --muted: #64748b;
+  --border: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b1020;
+    --foreground: #e2e8f0;
+    --surface: #121a2e;
+    --muted: #94a3b8;
+    --border: #1e293b;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition
+    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500
+    disabled:cursor-not-allowed disabled:opacity-60;
+}
+@utility btn-primary {
+  @apply btn bg-indigo-600 text-white hover:bg-indigo-500;
+}
+@utility btn-secondary {
+  @apply btn border border-border bg-surface hover:bg-indigo-50 dark:hover:bg-slate-800;
+}
+@utility card {
+  @apply rounded-2xl border border-border bg-surface p-6 shadow-sm;
+}
+@utility input {
+  @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm
+    focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30;
+}

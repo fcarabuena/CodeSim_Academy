@@ -1,0 +1,122 @@
+// CodeSim Academy data model.
+// Connection URLs live in prisma.config.ts (CLI, uses DIRECT_URL) and
+// src/lib/db.ts (runtime, uses the pooled DATABASE_URL).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  // Null for OAuth-only accounts.
+  passwordHash   String?
+  role           Role      @default(STUDENT)
+  xp             Int       @default(0)
+  level          Int       @default(1)
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastActiveDate DateTime?
+  // IANA zone name, e.g. "Europe/London". Streaks fall back to UTC when null.
+  timezone       String?
+  createdAt      DateTime  @default(now())
+
+  submissions Submission[]
+  progress    LessonProgress[]
+  badges      UserBadge[]
+}
+
+model Track {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  order       Int
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id         String @id @default(cuid())
+  slug       String
+  trackId    String
+  title      String
+  order      Int
+  difficulty String
+  xpReward   Int
+
+  track       Track            @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+  progress    LessonProgress[]
+
+  @@unique([trackId, slug])
+}
+
+model Submission {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  code        String
+  passed      Boolean
+  score       Int
+  resultsJson Json
+  createdAt   DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([lessonId])
+}
+
+model LessonProgress {
+  userId      String
+  lessonId    String
+  status      ProgressStatus @default(NOT_STARTED)
+  bestScore   Int            @default(0)
+  completedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([userId, lessonId])
+  @@index([completedAt])
+}
+
+model Badge {
+  id           String      @id @default(cuid())
+  slug         String      @unique
+  title        String
+  description  String
+  icon         String
+  criteriaJson Json
+  users        UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
+}
