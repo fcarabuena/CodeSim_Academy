@@ -7,7 +7,8 @@ export async function SiteHeader() {
   // Session cookie only, no database hit: keeps every page fast and working
   // even while the database wakes up. Pages re-check roles server-side.
   const user = (await auth())?.user;
-  const isStaff = user?.role === "TEACHER" || user?.role === "ADMIN";
+  const isAdmin = user?.role === "ADMIN";
+  const isStaff = user?.role === "TEACHER" || isAdmin;
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
@@ -21,7 +22,17 @@ export async function SiteHeader() {
               <span className="hidden sm:inline">
                 <NavLink href="/leaderboard">Leaderboard</NavLink>
               </span>
-              {isStaff && <NavLink href="/teacher">Teacher</NavLink>}
+              {/* Staff links on wider screens; on phones they're on the profile page. */}
+              {isStaff && (
+                <span className="hidden md:inline">
+                  <NavLink href="/teacher">Teacher</NavLink>
+                </span>
+              )}
+              {isAdmin && (
+                <span className="hidden md:inline">
+                  <NavLink href="/admin">Admin</NavLink>
+                </span>
+              )}
               <Link
                 href="/profile"
                 title={`Your profile (${user.name ?? user.email ?? ""})`}

@@ -25,8 +25,8 @@ export type Rewards = {
 /** Row-lock the student for the rest of the transaction (serialises their submissions). */
 export async function lockUser(tx: Tx, userId: string) {
   const rows = await tx.$queryRaw<
-    { xp: number; currentStreak: number; longestStreak: number; lastActiveDate: Date | null; timezone: string | null }[]
-  >`SELECT "xp", "currentStreak", "longestStreak", "lastActiveDate", "timezone" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
+    { xp: number; currentStreak: number; longestStreak: number; lastActiveDate: Date | null; timezone: string | null; disabledAt: Date | null }[]
+  >`SELECT "xp", "currentStreak", "longestStreak", "lastActiveDate", "timezone", "disabledAt" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
   const user = rows[0];
   if (!user) throw new Error("User not found");
   return user;

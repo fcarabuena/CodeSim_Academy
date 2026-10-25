@@ -42,11 +42,23 @@ export default async function ProfilePage() {
             {dateFormat.format(summary.createdAt)}
           </p>
         </div>
-        <form action={logOutAction} className="sm:ml-auto">
+        <div className="flex flex-wrap gap-2 sm:ml-auto">
+          {(user.role === "TEACHER" || user.role === "ADMIN") && (
+            <Link href="/teacher" className="btn-secondary">
+              Teacher dashboard
+            </Link>
+          )}
+          {user.role === "ADMIN" && (
+            <Link href="/admin" className="btn-secondary">
+              Admin
+            </Link>
+          )}
+        <form action={logOutAction}>
           <button type="submit" className="btn-secondary">
             Log out
           </button>
         </form>
+        </div>
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">

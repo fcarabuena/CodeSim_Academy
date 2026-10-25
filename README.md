@@ -266,7 +266,31 @@ Everything here is designed for free plans, but free plans have limits:
    their progress per lesson, attempts, best scores, and the exact code they
    submitted with its test results.
 
-Teachers only ever see their own classes; admins (`ADMIN`) see all of them. Every
+Teachers only ever see their own classes. On a class page a teacher can also
+**remove a student** (they keep their account and progress) or make a **new join
+code** (the old one stops working).
+
+### Admins
+
+Make someone an admin with `npm run set-role -- email ADMIN` (they log out and back
+in). The **Admin** area (`/admin`) is separate from the Teacher side:
+
+- **Overview:** totals for users, students, teachers, classes, submissions, lessons
+  completed and active users this week.
+- **Users:** search and page through everyone (emails are partly hidden), change a
+  role, disable or re-enable an account (disabled users can't log in or submit, and
+  are signed out), or delete an account after a confirmation.
+- **Classes:** every class with its teacher, students and code; move a class to
+  another teacher or delete it.
+- **Content:** tracks, lessons and badges with how many students started, completed
+  or earned them (read-only: lessons live in `content/`).
+- **Audit log:** every admin action (and teachers' class changes) with who, what,
+  target and when. The `set-role` script is logged too.
+
+Safety rules: an admin can't change, disable or delete their own account, and the
+last active admin can't be demoted, disabled or deleted (also enforced by
+`set-role`). The proxy and every admin page and action check the role, and admin
+actions are rate-limited. Every
 teacher page checks the role and class ownership on the server. Joining is
 rate-limited to stop code guessing.
 

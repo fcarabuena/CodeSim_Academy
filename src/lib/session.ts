@@ -13,16 +13,19 @@ export type CurrentUser = {
 
 /**
  * The signed-in user, read fresh from the database (so a role change takes
- * effect without logging out), or null when signed out.
+ * effect without logging out), or null when signed out. A disabled account
+ * counts as signed out, which also ends its existing sessions.
  */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const session = await auth();
   const id = session?.user?.id;
   if (!id) return null;
-  return db.user.findUnique({
+  const user = await db.user.findUnique({
     where: { id },
-    select: { id: true, name: true, email: true, role: true },
+    select: { id: true, name: true, email: true, role: true, disabledAt: true },
   });
+  if (!user || user.disabledAt) return null;
+  return { id: user.id, name: user.name, email: user.email, role: user.role };
 }
 
 /** Use in pages and actions that require login. */

@@ -49,6 +49,20 @@ export async function createClassroom(teacher: CurrentUser, name: string) {
   throw new Error("Couldn't generate a unique class code.");
 }
 
+/** Give a class a fresh join code (the old one stops working). */
+export async function regenerateClassCode(classroomId: string): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      const { code } = await db.classroom.update({ where: { id: classroomId }, data: { code: generateClassCode() }, select: { code: true } });
+      return code;
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") continue;
+      throw err;
+    }
+  }
+  throw new Error("Couldn't generate a unique class code.");
+}
+
 export type JoinResult = { ok: true; className: string; alreadyMember: boolean } | { ok: false; error: string };
 
 export async function joinClassroom(userId: string, code: string): Promise<JoinResult> {

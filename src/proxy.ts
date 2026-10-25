@@ -6,7 +6,8 @@ import { routeDecision } from "@/lib/route-access";
 // Reads the signed session cookie only (no database), so it's cheap enough to
 // run before every private page. Signed-out visitors go to /login and
 // students go from teacher pages to /dashboard with a real redirect, before
-// anything renders. Pages still re-check roles in the database.
+// anything renders; the same goes for non-admins and /admin. Pages still
+// re-check roles (and disabled accounts) in the database.
 const { auth } = NextAuth(authConfig);
 
 export const proxy = auth((request) => {
@@ -25,5 +26,5 @@ export const proxy = auth((request) => {
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*", "/leaderboard/:path*", "/teacher/:path*"],
+  matcher: ["/dashboard/:path*", "/profile/:path*", "/leaderboard/:path*", "/teacher/:path*", "/admin/:path*"],
 };

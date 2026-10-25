@@ -81,6 +81,9 @@ export async function logInAction(_prev: FormState, formData: FormData): Promise
   } catch (err) {
     if (err instanceof AuthError) {
       const code = (err as AuthError & { code?: string }).code;
+      if (code === "account_disabled") {
+        return { error: "This account has been disabled. Please contact your school's admin.", values: echo(formData) };
+      }
       if (code === "rate_limited") {
         return { error: "Too many login attempts. Please wait a few minutes and try again.", values: echo(formData) };
       }

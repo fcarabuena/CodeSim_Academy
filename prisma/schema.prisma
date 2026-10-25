@@ -37,6 +37,8 @@ model User {
   lastActiveDate DateTime?
   // IANA zone name, e.g. "Europe/London". Streaks fall back to UTC when null.
   timezone       String?
+  /// Set when an admin disables the account: it can't log in or submit.
+  disabledAt     DateTime?
   createdAt      DateTime  @default(now())
 
   submissions   Submission[]
@@ -44,6 +46,7 @@ model User {
   badges        UserBadge[]
   classesTaught Classroom[]       @relation("TeacherClasses")
   memberships   ClassMembership[]
+  auditEntries  AuditLog[]
 }
 
 model Track {
@@ -152,4 +155,25 @@ model ClassMembership {
 
   @@id([classroomId, userId])
   @@index([userId])
+}
+
+/// Every admin action: who did what to which record, and when.
+model AuditLog {
+  id          String   @id @default(cuid())
+  /// Null if the admin's account was later deleted, or for script actions.
+  actorId     String?
+  /// Snapshot of who acted (name and masked email), kept even if the account goes.
+  actorLabel  String
+  /// e.g. "user.role_changed", "class.deleted"
+  action      String
+  targetType  String
+  targetId    String?
+  /// Snapshot of the target (masked email or class name).
+  targetLabel String
+  details     Json?
+  createdAt   DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
 }

@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: "Log in" };
 const ERRORS: Record<string, string> = {
   github_no_email: "Your GitHub account has no public email. Add one on GitHub or sign up with email.",
   OAuthAccountNotLinked: "That email is already used by another sign-in method.",
+  account_disabled: "This account has been disabled. Please contact your school's admin.",
 };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {

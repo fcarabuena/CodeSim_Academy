@@ -122,7 +122,7 @@ export async function getWeeklyLeaderboard(currentUserId: string | null, now = n
       FROM "LessonProgress" lp
       JOIN "Lesson" l ON l."id" = lp."lessonId"
       JOIN "User" u ON u."id" = lp."userId"
-      WHERE lp."completedAt" >= ${start} AND lp."completedAt" < ${end} AND u."role" = 'STUDENT'
+      WHERE lp."completedAt" >= ${start} AND lp."completedAt" < ${end} AND u."role" = 'STUDENT' AND u."disabledAt" IS NULL
       GROUP BY u."id", u."name"
     ),
     ranked AS (

@@ -1,17 +1,19 @@
 /**
  * Which signed-in users may enter which private pages, decided in proxy.ts
  * from the session cookie before anything renders. This is a fast first
- * check only: every teacher page still checks the role in the database
- * (requireRole), so a stale or forged cookie can't get further.
+ * check only: every teacher and admin page still checks the role (and that
+ * the account isn't disabled) in the database, so a stale or forged cookie
+ * can't get further.
  */
 
 export type RouteDecision = "allow" | "login" | "forbidden";
 
-const STAFF_ROLES = new Set(["TEACHER", "ADMIN"]);
+const inArea = (pathname: string, area: string) => pathname === area || pathname.startsWith(`${area}/`);
 
 export function routeDecision(pathname: string, user: { id?: string; role?: string } | null | undefined): RouteDecision {
   if (!user?.id) return "login";
-  const teacherArea = pathname === "/teacher" || pathname.startsWith("/teacher/");
-  if (teacherArea && !STAFF_ROLES.has(user.role ?? "")) return "forbidden";
+  const role = user.role ?? "";
+  if (inArea(pathname, "/admin") && role !== "ADMIN") return "forbidden";
+  if (inArea(pathname, "/teacher") && role !== "TEACHER" && role !== "ADMIN") return "forbidden";
   return "allow";
 }

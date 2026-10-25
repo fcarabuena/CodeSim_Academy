@@ -18,6 +18,8 @@ const emailPrefix = `smoke-${runId}`;
 const password = "SmokeTest123!";
 const student = { name: "Smoke Student", email: `${emailPrefix}-student@example.com` };
 const teacher = { name: "Smoke Teacher", email: `${emailPrefix}-teacher@example.com` };
+const admin = { name: "Smoke Admin", email: `${emailPrefix}-admin@example.com` };
+const victim = { name: "Smoke Victim", email: `${emailPrefix}-victim@example.com` };
 
 const databaseUrl = process.env.E2E_DATABASE_URL ?? process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 
@@ -73,6 +75,15 @@ async function setCode(page: Page, code: string) {
     const m = (window as unknown as { monaco: { editor: { getModels(): { setValue(v: string): void }[] } } }).monaco;
     m.editor.getModels()[0]!.setValue(c);
   }, code);
+}
+
+/** Result toast from an admin/teacher action. */
+const toastWith = (page: Page, text: string | RegExp) => page.locator(".toast-pop", { hasText: text });
+
+/** Click a button that opens a confirm dialog, then confirm. */
+async function confirmAction(page: Page, scope: ReturnType<Page["locator"]>, button: string, confirmLabel: string) {
+  await scope.getByRole("button", { name: button }).click();
+  await page.getByRole("dialog").getByRole("button", { name: confirmLabel }).click();
 }
 
 const resultsSummary = (page: Page) => page.locator("div.space-y-3[aria-live=polite] p.font-semibold").first();
@@ -166,7 +177,29 @@ test("a teacher can create a class and follow a student", async ({ browser }) =>
   const total = (await listTracks()).reduce((n, t) => n + t.lessons.length, 0);
   await expect(row).toContainText(`${total} / ${total}`);
 
-  await row.getByRole("link", { name: student.name }).click();
+  // New join code: the old one stops working.
+  await confirmAction(teacherPage, teacherPage.locator("main"), "New code", "Make new code");
+  await expect(toastWith(teacherPage, "New join code")).toBeVisible();
+  await teacherPage.reload();
+  const newCode = (await teacherPage.locator("span.font-mono.tracking-widest").first().textContent())!.trim();
+  expect(newCode).not.toBe(code);
+
+  // Remove the student; they can't rejoin with the old code, only the new one.
+  await confirmAction(teacherPage, teacherPage.locator("tbody tr", { hasText: student.name }), "Remove", "Remove from class");
+  await expect(toastWith(teacherPage, "Removed")).toBeVisible();
+  await teacherPage.reload();
+  await expect(teacherPage.locator("tbody tr", { hasText: student.name })).toHaveCount(0);
+  await studentPage.goto("/dashboard");
+  await studentPage.fill("#class-code", code);
+  await studentPage.getByRole("button", { name: "Join" }).click();
+  await expect(studentPage.getByRole("status").filter({ hasText: "couldn't find a class" })).toBeVisible();
+  await studentPage.fill("#class-code", newCode);
+  await studentPage.getByRole("button", { name: "Join" }).click();
+  await expect(studentPage.getByRole("status").filter({ hasText: "Smoke Test Class" })).toBeVisible();
+  await teacherPage.reload();
+
+  const rejoined = teacherPage.locator("tbody tr", { hasText: student.name });
+  await rejoined.getByRole("link", { name: student.name }).click();
   await expect(teacherPage.getByRole("heading", { name: student.name })).toBeVisible();
   await expect(teacherPage.locator("details").first()).toBeVisible();
 
@@ -177,4 +210,94 @@ test("a teacher can create a class and follow a student", async ({ browser }) =>
   expect(new URL(direct.headers().location!, teacherPage.url()).pathname).toBe("/dashboard");
   await studentPage.goto(teacherPage.url());
   await expect(studentPage).toHaveURL(/\/dashboard$/);
+});
+
+test("an admin manages users, classes and the audit log", async ({ browser }) => {
+  await signUp(browser, victim);
+  await signUp(browser, admin);
+  await sql(`UPDATE "User" SET role = 'ADMIN' WHERE email = $1`, [admin.email]);
+  const adminPage = await logIn(browser, admin);
+  const studentPage = await logIn(browser, student);
+  const teacherPage = await logIn(browser, teacher);
+
+  // Only admins get into /admin: the proxy redirects everyone else before rendering.
+  for (const page of [studentPage, teacherPage]) {
+    const r = await page.request.get("/admin/users", { maxRedirects: 0 });
+    expect(r.status()).toBe(307);
+    expect(new URL(r.headers().location!, "http://x").pathname).toBe("/dashboard");
+  }
+
+  // Overview.
+  await adminPage.goto("/admin");
+  await expect(adminPage.getByRole("heading", { name: "Site administration" })).toBeVisible();
+  await expect(adminPage.locator("header").getByRole("link", { name: "Admin" })).toBeVisible();
+
+  // Users: search by name; emails are masked on the page.
+  await adminPage.goto(`/admin/users?q=${encodeURIComponent(student.name)}`);
+  const studentRow = adminPage.locator("tbody tr", { hasText: student.name });
+  await expect(studentRow).toBeVisible();
+  expect(await adminPage.content()).not.toContain(student.email);
+
+  // Change role there and back.
+  await studentRow.locator("select[name=role]").selectOption("TEACHER");
+  await studentRow.getByRole("button", { name: "Change role" }).click();
+  await expect(toastWith(adminPage, "is now teacher")).toBeVisible();
+  await adminPage.reload();
+  await studentRow.locator("select[name=role]").selectOption("STUDENT");
+  await studentRow.getByRole("button", { name: "Change role" }).click();
+  await expect(toastWith(adminPage, "is now student")).toBeVisible();
+
+  // Disable: the student's open session stops working and they can't log in.
+  await adminPage.reload();
+  await confirmAction(adminPage, studentRow, "Disable", "Disable account");
+  await expect(toastWith(adminPage, "can no longer log in")).toBeVisible();
+  await studentPage.goto("/dashboard");
+  await expect(studentPage).toHaveURL(/\/login/);
+  const blocked = await (await browser.newContext()).newPage();
+  await blocked.goto("/login");
+  await blocked.fill("#field-email", student.email);
+  await blocked.fill("#field-password", password);
+  await blocked.click("button[type=submit]");
+  await expect(blocked.locator("form [role=alert]")).toContainText("disabled");
+  // ...and enable again.
+  await adminPage.reload();
+  await studentRow.getByRole("button", { name: "Enable" }).click();
+  await expect(toastWith(adminPage, "can log in again")).toBeVisible();
+
+  // An admin can't change their own account.
+  await adminPage.goto(`/admin/users?q=${encodeURIComponent(admin.name)}`);
+  await expect(adminPage.locator("tbody tr", { hasText: admin.name })).toContainText("change your own account");
+
+  // Delete an account (with the confirm dialog).
+  await adminPage.goto(`/admin/users?q=${encodeURIComponent(victim.name)}`);
+  await confirmAction(adminPage, adminPage.locator("tbody tr", { hasText: victim.name }), "Delete", "Delete permanently");
+  await expect(toastWith(adminPage, "Deleted")).toBeVisible();
+  expect(await sql(`SELECT 1 FROM "User" WHERE email = $1`, [victim.email])).toHaveLength(0);
+
+  // Classes: reassign the smoke class to the admin, then delete it.
+  await adminPage.goto("/admin/classes");
+  const classRow = adminPage.locator("tbody tr", { hasText: "Smoke Test Class" });
+  await expect(classRow).toContainText(teacher.name);
+  const adminOption = classRow.locator("select[name=teacherId] option", { hasText: admin.name });
+  await classRow.locator("select[name=teacherId]").selectOption((await adminOption.getAttribute("value"))!);
+  await classRow.getByRole("button", { name: "Reassign" }).click();
+  await expect(toastWith(adminPage, "now belongs to")).toBeVisible();
+  await adminPage.reload();
+  await expect(classRow).toContainText(admin.name);
+  await confirmAction(adminPage, classRow, "Delete", "Delete class");
+  await expect(toastWith(adminPage, "Deleted the class")).toBeVisible();
+  await adminPage.reload();
+  await expect(adminPage.locator("tbody tr", { hasText: "Smoke Test Class" })).toHaveCount(0);
+
+  // Content page shows completion counts.
+  await adminPage.goto("/admin/content");
+  await expect(adminPage.getByRole("heading", { name: "Badges" })).toBeVisible();
+
+  // Audit log recorded every action, with masked emails.
+  await adminPage.goto("/admin/audit");
+  const log = adminPage.locator("tbody");
+  for (const text of ["to teacher", "disabled Smoke Student", "re-enabled Smoke Student", "deleted Smoke Victim", "moved class", "deleted class", "new join code", "removed Smoke Student"]) {
+    await expect(log).toContainText(text);
+  }
+  expect(await adminPage.content()).not.toContain(student.email);
 });

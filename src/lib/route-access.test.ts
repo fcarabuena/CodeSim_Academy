@@ -23,7 +23,16 @@ describe("routeDecision", () => {
     expect(routeDecision("/teacher", { id: "a1", role: "ADMIN" })).toBe("allow");
   });
 
+  it("keeps the admin area for admins only", () => {
+    expect(routeDecision("/admin", student)).toBe("forbidden");
+    expect(routeDecision("/admin/users", { id: "t1", role: "TEACHER" })).toBe("forbidden");
+    expect(routeDecision("/admin/audit", { id: "a1", role: "ADMIN" })).toBe("allow");
+    expect(routeDecision("/administrator-guide", student)).toBe("allow");
+    expect(routeDecision("/admin", null)).toBe("login");
+  });
+
   it("treats a missing role as a student", () => {
     expect(routeDecision("/teacher", { id: "x" })).toBe("forbidden");
+    expect(routeDecision("/admin", { id: "x" })).toBe("forbidden");
   });
 });

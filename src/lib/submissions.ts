@@ -73,6 +73,7 @@ export async function submit(userId: string, input: SubmissionInput): Promise<Su
     // Lock the student first: their concurrent submissions now run one at a
     // time, so XP and badges can't be awarded twice.
     const user = await lockUser(tx, userId);
+    if (user.disabledAt) throw new SubmissionError("This account has been disabled.", 403);
     const now = new Date();
 
     const timezone = user.timezone ?? sanitizeTimezone(input.timezone) ?? null;

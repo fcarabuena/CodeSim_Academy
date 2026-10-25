@@ -12,6 +12,10 @@ class TooManyAttempts extends CredentialsSignin {
   code = "rate_limited";
 }
 
+class AccountDisabled extends CredentialsSignin {
+  code = "account_disabled";
+}
+
 export const githubEnabled = Boolean(process.env.GITHUB_ID && process.env.GITHUB_SECRET);
 
 const providers: NextAuthConfig["providers"] = [
@@ -31,6 +35,8 @@ const providers: NextAuthConfig["providers"] = [
         ? await verifyPassword(password, user.passwordHash)
         : await fakeVerify(password);
       if (!user || !ok) return null;
+      // Only revealed after a correct password, so it can't be used to probe accounts.
+      if (user.disabledAt) throw new AccountDisabled();
 
       return { id: user.id, name: user.name, email: user.email };
     },
@@ -53,6 +59,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // No adapter: GitHub users are matched to our User table by email.
       const email = user.email?.toLowerCase();
       if (!email) return "/login?error=github_no_email";
+      const existing = await db.user.findUnique({ where: { email }, select: { disabledAt: true } });
+      if (existing?.disabledAt) return "/login?error=account_disabled";
       await db.user.upsert({
         where: { email },
         update: {},

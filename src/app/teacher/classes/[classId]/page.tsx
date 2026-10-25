@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ActionForm } from "@/components/action-form";
 import { CopyCodeButton } from "@/components/class-forms";
 import { ProgressBar } from "@/components/stats-ui";
 import { getClassStudents, getClassSubmissions, getManagedClassroom } from "@/lib/classes";
 import { listTracks } from "@/lib/content/loader";
 import { timeAgo } from "@/lib/format";
 import { requireRole } from "@/lib/session";
+import { regenerateCodeAction, removeStudentAction } from "../../actions";
 
 export const metadata: Metadata = { title: "Class" };
 
@@ -43,6 +45,16 @@ export default async function ClassPage({ params }: PageProps<"/teacher/classes/
             {classroom.code}
           </span>
           <CopyCodeButton code={classroom.code} />
+          <ActionForm
+            action={regenerateCodeAction}
+            fields={{ classId: classroom.id }}
+            label="New code"
+            confirm={{
+              title: "Make a new join code?",
+              body: `The current code (${classroom.code}) will stop working straight away. Students already in the class stay in it.`,
+              confirmLabel: "Make new code",
+            }}
+          />
         </div>
       </div>
       <p className="mt-2 text-sm text-muted">
@@ -61,7 +73,7 @@ export default async function ClassPage({ params }: PageProps<"/teacher/classes/
           <p className="mt-3 text-muted">No students yet. Share the join code above.</p>
         ) : (
           <div className="card mt-4 overflow-x-auto p-0">
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="w-full min-w-[720px] text-sm">
               <thead className="bg-border/40 text-left text-xs uppercase tracking-wide text-muted">
                 <tr>
                   <th className="px-4 py-2 font-semibold">Student</th>
@@ -70,6 +82,9 @@ export default async function ClassPage({ params }: PageProps<"/teacher/classes/
                   <th className="px-4 py-2 text-right font-semibold">Level</th>
                   <th className="px-4 py-2 text-right font-semibold">Streak</th>
                   <th className="px-4 py-2 font-semibold">Last active</th>
+                  <th className="px-4 py-2 font-semibold">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -93,6 +108,18 @@ export default async function ClassPage({ params }: PageProps<"/teacher/classes/
                     <td className="px-4 py-3 text-right">{s.level}</td>
                     <td className="px-4 py-3 text-right">{s.streak > 0 ? `🔥 ${s.streak}` : "0"}</td>
                     <td className="px-4 py-3 text-muted">{timeAgo(s.lastActive, now)}</td>
+                    <td className="px-4 py-3">
+                      <ActionForm
+                        action={removeStudentAction}
+                        fields={{ classId: classroom.id, studentId: s.id }}
+                        label="Remove"
+                        confirm={{
+                          title: `Remove ${s.name ?? "this student"} from the class?`,
+                          body: "They'll leave this class, but keep their account, progress and badges. They can rejoin with the join code.",
+                          confirmLabel: "Remove from class",
+                        }}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

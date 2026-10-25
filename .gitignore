@@ -47,3 +47,7 @@ next-env.d.ts
 # playwright
 /test-results/
 /playwright-report/
+
+# promo video: keep the script, ignore recordings, audio and renders
+/video/*
+!/video/script.md
