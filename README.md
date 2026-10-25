@@ -43,6 +43,10 @@ Teachers create classes and follow their students' progress.
    node -v     # should print v24.22.1 or higher
    ```
 
+   Use the **24 LTS** line (what the live site runs). Node 26 currently makes
+   `npm run dev` reload the page in an endless loop (the dev server's own log file
+   triggers its file watcher); production isn't affected, but development is.
+
    Already have an older Node? Run the newer installer over it, or on Windows run
    `winget upgrade OpenJS.NodeJS.LTS`. If you use a version manager (nvm, fnm,
    nvm-windows), `nvm install 24.22.1` then `nvm use 24.22.1`.
