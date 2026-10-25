@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import { authConfig } from "@/auth.config";
 import { routeDecision } from "@/lib/route-access";
 
-// Reads the signed session cookie only (no database), so it's cheap enough to
-// run before every private page. Signed-out visitors go to /login and
+// Reads the signed session cookie (and, at most once a minute per user,
+// re-reads the role from the database; see auth.config.ts). Signed-out visitors go to /login and
 // students go from teacher pages to /dashboard with a real redirect, before
 // anything renders; the same goes for non-admins and /admin. Pages still
 // re-check roles (and disabled accounts) in the database.
@@ -25,6 +25,10 @@ export const proxy = auth((request) => {
   return NextResponse.next();
 });
 
+// Runs on every page (not just private ones) so the session's role is
+// refreshed and the updated cookie saved wherever the user browses; only the
+// private areas in route-access.ts are guarded. Static files, the API and the
+// code-runner workers are skipped.
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*", "/leaderboard/:path*", "/teacher/:path*", "/admin/:path*"],
+  matcher: ["/((?!api/|_next/|runners/|favicon.ico).*)"],
 };

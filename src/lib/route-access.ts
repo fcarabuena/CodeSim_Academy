@@ -10,7 +10,11 @@ export type RouteDecision = "allow" | "login" | "forbidden";
 
 const inArea = (pathname: string, area: string) => pathname === area || pathname.startsWith(`${area}/`);
 
+/** Pages that need a signed-in user. Everything else is public. */
+const PRIVATE_AREAS = ["/dashboard", "/profile", "/leaderboard", "/teacher", "/admin"];
+
 export function routeDecision(pathname: string, user: { id?: string; role?: string } | null | undefined): RouteDecision {
+  if (!PRIVATE_AREAS.some((area) => inArea(pathname, area))) return "allow";
   if (!user?.id) return "login";
   const role = user.role ?? "";
   if (inArea(pathname, "/admin") && role !== "ADMIN") return "forbidden";

@@ -68,21 +68,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       });
       return true;
     },
-    async jwt({ token, user, account }) {
-      if (user) {
-        // First call after sign-in: resolve our own user id and role.
-        const where =
-          account?.provider === "github"
-            ? { email: user.email!.toLowerCase() }
-            : { id: user.id! };
-        const dbUser = await db.user.findUnique({ where, select: { id: true, role: true } });
-        if (dbUser) {
-          token.uid = dbUser.id;
-          token.role = dbUser.role;
-        }
-      }
-      return token;
-    },
   },
 });
 
@@ -96,5 +81,7 @@ declare module "@auth/core/jwt" {
   interface JWT {
     uid?: string;
     role?: Role;
+    /** When the role was last read from the database (ms since epoch). */
+    roleCheckedAt?: number;
   }
 }

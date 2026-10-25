@@ -29,6 +29,6 @@ export default defineConfig({
         reuseExistingServer: true,
         timeout: 120_000,
         // Auth redirects must point at the port the test uses.
-        env: { AUTH_URL: baseURL },
+        env: { AUTH_URL: baseURL, AUTH_ROLE_REFRESH_MS: "2000" },
       },
 });

@@ -242,6 +242,10 @@ test("an admin manages users, classes and the audit log", async ({ browser }) =>
   await studentRow.locator("select[name=role]").selectOption("TEACHER");
   await studentRow.getByRole("button", { name: "Change role" }).click();
   await expect(toastWith(adminPage, "is now teacher")).toBeVisible();
+  // The student's open session picks up the new role without logging out.
+  await studentPage.waitForTimeout(2500);
+  await studentPage.goto("/dashboard");
+  await expect(studentPage.locator("header").getByRole("link", { name: "Teacher" })).toBeVisible();
   await adminPage.reload();
   await studentRow.locator("select[name=role]").selectOption("STUDENT");
   await studentRow.getByRole("button", { name: "Change role" }).click();

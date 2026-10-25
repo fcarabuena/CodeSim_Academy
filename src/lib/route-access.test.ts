@@ -31,6 +31,12 @@ describe("routeDecision", () => {
     expect(routeDecision("/admin", null)).toBe("login");
   });
 
+  it("leaves public pages alone, signed in or not", () => {
+    expect(routeDecision("/", null)).toBe("allow");
+    expect(routeDecision("/tracks/python/functions", null)).toBe("allow");
+    expect(routeDecision("/login", student)).toBe("allow");
+  });
+
   it("treats a missing role as a student", () => {
     expect(routeDecision("/teacher", { id: "x" })).toBe("forbidden");
     expect(routeDecision("/admin", { id: "x" })).toBe("forbidden");
