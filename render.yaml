@@ -16,7 +16,7 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
-        value: "22"
+        value: "24.22.1"
       # Neon pooled connection string (host contains "-pooler").
       - key: DATABASE_URL
         sync: false

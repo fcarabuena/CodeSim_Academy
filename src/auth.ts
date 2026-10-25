@@ -1,4 +1,5 @@
 import NextAuth, { CredentialsSignin, type NextAuthConfig } from "next-auth";
+import { authConfig } from "@/auth.config";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import type { Role } from "@/generated/prisma/enums";
@@ -43,12 +44,10 @@ if (githubEnabled) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // Render terminates TLS in front of the app; AUTH_URL pins the public origin.
-  trustHost: true,
-  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
-  pages: { signIn: "/login" },
+  ...authConfig,
   providers,
   callbacks: {
+    ...authConfig.callbacks,
     async signIn({ account, user }) {
       if (account?.provider !== "github") return true;
       // No adapter: GitHub users are matched to our User table by email.
@@ -75,11 +74,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
       return token;
-    },
-    session({ session, token }) {
-      if (token.uid) session.user.id = token.uid;
-      if (token.role) session.user.role = token.role;
-      return session;
     },
   },
 });

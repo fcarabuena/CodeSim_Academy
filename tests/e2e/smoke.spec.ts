@@ -141,10 +141,14 @@ test("infinite loops are stopped without freezing the page", async ({ browser })
 });
 
 test("a teacher can create a class and follow a student", async ({ browser }) => {
-  const teacherPage = await signUp(browser, teacher);
+  await signUp(browser, teacher);
   await sql(`UPDATE "User" SET role = 'TEACHER' WHERE email = $1`, [teacher.email]);
+  // Like a real teacher after `npm run set-role`: log in again so the session
+  // carries the new role (the proxy reads the role from the session).
+  const teacherPage = await logIn(browser, teacher);
 
   await teacherPage.goto("/teacher");
+  await expect(teacherPage.getByRole("heading", { name: "Teacher dashboard" })).toBeVisible();
   await teacherPage.fill("#class-name", "Smoke Test Class");
   await teacherPage.getByRole("button", { name: "Create class" }).click();
   await teacherPage.waitForURL(/\/teacher\/classes\//);
@@ -166,7 +170,11 @@ test("a teacher can create a class and follow a student", async ({ browser }) =>
   await expect(teacherPage.getByRole("heading", { name: student.name })).toBeVisible();
   await expect(teacherPage.locator("details").first()).toBeVisible();
 
-  // A student can't open teacher pages.
+  // A student can't open teacher pages: the proxy redirects before anything
+  // renders (a real HTTP redirect, not a client-side one).
+  const direct = await studentPage.request.get(teacherPage.url(), { maxRedirects: 0 });
+  expect(direct.status()).toBe(307);
+  expect(new URL(direct.headers().location!, teacherPage.url()).pathname).toBe("/dashboard");
   await studentPage.goto(teacherPage.url());
   await expect(studentPage).toHaveURL(/\/dashboard$/);
 });

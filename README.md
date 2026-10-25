@@ -35,13 +35,17 @@ Teachers create classes and follow their students' progress.
 
 ### What you need
 
-1. **Node.js 22 or newer.** Download the "LTS" installer from
-   [nodejs.org](https://nodejs.org) and run it. Check it worked by opening a terminal
-   (on Windows: *PowerShell*; on macOS: *Terminal*) and typing:
+1. **Node.js 24.22.1 or newer** (the version is also in `.nvmrc`). Download the
+   "LTS" installer from [nodejs.org](https://nodejs.org) and run it. Check it worked
+   by opening a terminal (on Windows: *PowerShell*; on macOS: *Terminal*) and typing:
 
    ```bash
-   node -v     # should print v22.something or higher
+   node -v     # should print v24.22.1 or higher
    ```
+
+   Already have an older Node? Run the newer installer over it, or on Windows run
+   `winget upgrade OpenJS.NodeJS.LTS`. If you use a version manager (nvm, fnm,
+   nvm-windows), `nvm install 24.22.1` then `nvm use 24.22.1`.
 
 2. **Git**, to download the code and later publish it. Get it from
    [git-scm.com](https://git-scm.com/downloads).
@@ -278,6 +282,7 @@ rate-limited to stop code guessing.
 | `npm run db:studio` | Browse the database in your browser |
 | `npm run content:expected` | Regenerate `expected.json` for SQL lessons |
 | `npm run set-role -- <email> <STUDENT\|TEACHER\|ADMIN>` | Change someone's role |
+| `npm install-scripts ls` | List dependencies whose install scripts haven't been reviewed |
 
 ---
 
@@ -296,6 +301,11 @@ and each starter must fail.
 npm run build
 npm run test:e2e     # browser smoke test
 ```
+
+**Continuous integration.** `.github/workflows/ci.yml` runs lint, type-check,
+unit tests and the production build on GitHub for every push to `main` and every
+pull request. It uses a read-only token, actions pinned to commit SHAs, no
+secrets and no database.
 
 The smoke test opens a real browser, signs up a student, solves **all 14 lessons**
 through the editor (so every runner, including Python, is exercised), checks that
@@ -455,7 +465,19 @@ PostgreSQL, Auth.js v5, Zod, Monaco editor, Vitest and Playwright.
 - Passwords are hashed with bcrypt; log-in, sign-up, submissions and class joining
   are rate-limited.
 - No secrets in the repository: settings live in `.env` (local) and Render's
-  environment variables.
+  environment variables. `render.yaml` only names the variables.
+- Dependencies are installed with `npm ci` from the committed `package-lock.json`,
+  so every install gets exactly the reviewed versions. npm 11 blocks dependency
+  install scripts unless they're listed in `allowScripts` in `package.json`; only
+  four are approved (Prisma, esbuild, unrs-resolver), each pinned to its version.
+  After upgrading one of them, review and approve it again with
+  `npm install-scripts approve <package>`.
+- The proxy reads the signed session cookie to send signed-out visitors to log in
+  and students away from teacher pages before anything renders; the pages then
+  check the role again in the database.
+- **Turn on two-factor authentication (2FA)** for every account that can change
+  this app: GitHub (the code and CI), npm (if you publish packages), Render (the
+  running site and its environment variables) and Neon (the database).
 - GitHub sign-in links accounts by email address and needs a public email on the
   GitHub account.
 
@@ -491,3 +513,5 @@ The MVP leaves clean extension points for these planned phases:
 | Python "Loading…" for a while | The first Python run downloads Pyodide (about 10 MB) and caches it. Later runs are instant. |
 | No **Teacher** link after `set-role` | Log out and back in. |
 | `npm run set-role` says "No user" | The person has to sign up on the site first. |
+| `npm ci` ends with "install scripts … skipped" | A dependency with an install script changed version. Review it with `npm install-scripts ls`, then `npm install-scripts approve <package>`. |
+| `npm warn EBADENGINE` | Your Node is older than 24.22.1. Update it (see section 1). |
